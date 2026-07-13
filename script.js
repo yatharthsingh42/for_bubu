@@ -47,6 +47,9 @@
     meteorMaxGapMs: 55000,
 
     fireflyCount: 22,
+    fireflyHeartCycleMs: 26000, // fireflies gather into a heart roughly this often
+
+    petalCount: 26,
 
     entranceDurationMs: 5200, // how long the "sky waking up" takes
     zoomPeriodMs: 30000, // whole-scene breathing zoom, one cycle
@@ -107,6 +110,12 @@
       }
       #fireflies-canvas {
         position: absolute; inset: 0; pointer-events: none; z-index: 9;
+      }
+      #petals-canvas {
+        position: absolute; inset: 0; pointer-events: none; z-index: 13;
+      }
+      #stardust-canvas {
+        position: absolute; inset: 0; pointer-events: none; z-index: 19;
       }
       .memory-panel {
         position: absolute;
@@ -206,6 +215,7 @@
     lakeMouse: { x: -9999, y: -9999, active: false },
 
     began: false,
+    beganAt: 0, // timestamp of the "begin" click, for timed moments (e.g. the firefly heart)
     audioLevel: 0, // 0..1 music amplitude, if audio is wired up
 
     moonPos: { x: 0, y: 0, r: 140 }, // updated on resize, screen px
@@ -867,8 +877,35 @@
           vx: rand(-0.3, 0.3),
           vy: rand(-0.2, 0.2),
           phase: rand(0, TAU),
+          heartAngle: (i / CONFIG.fireflyCount) * TAU + rand(-0.06, 0.06),
         });
       }
+    }
+
+    // Parametric heart curve — classic "16sin^3" shape, flipped so it
+    // points up on screen. Each firefly is permanently assigned one
+    // point on this curve (heartAngle) so the formation is stable
+    // rather than reshuffling every cycle.
+    function heartPoint(t, cx, cy, scale) {
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y =
+        13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+      return { x: cx + x * scale, y: cy - y * scale };
+    }
+
+    function smoothstep(t) {
+      t = clamp(t, 0, 1);
+      return t * t * (3 - 2 * t);
+    }
+
+    // Ease the formation in, hold it, then dissolve it — as a
+    // fraction of one fireflyHeartCycleMs cycle.
+    function heartFactor(cyclePos) {
+      const start = 0.55, rampIn = 0.68, rampOut = 0.82, end = 0.92;
+      if (cyclePos < start || cyclePos > end) return 0;
+      if (cyclePos < rampIn) return smoothstep((cyclePos - start) / (rampIn - start));
+      if (cyclePos < rampOut) return 1;
+      return 1 - smoothstep((cyclePos - rampOut) / (end - rampOut));
     }
 
     function buildClouds() {
@@ -891,6 +928,19 @@
       ctx.clearRect(0, 0, w, h);
       const tsec = State.elapsed / 1000;
 
+      // periodically the fireflies drift together into a heart, hold
+      // for a moment, then dissolve back into free wandering
+      let heartT = 0;
+      if (State.began) {
+        const cyclePos =
+          ((State.now - State.beganAt) % CONFIG.fireflyHeartCycleMs) /
+          CONFIG.fireflyHeartCycleMs;
+        heartT = heartFactor(cyclePos);
+      }
+      const heartCx = w * 0.5;
+      const heartCy = h * 0.46;
+      const heartScale = Math.min(w, h) * 0.011;
+
       // fireflies — confined to lower third, near the lake
       for (const f of flies) {
         f.vx += rand(-0.02, 0.02);
@@ -900,16 +950,25 @@
         f.x += f.vx * (0.5 + State.wind);
         f.y += f.vy * (0.5 + State.wind * 0.5);
         f.x = (f.x + w) % w;
-        f.y = clamp(f.y, h * 0.68, h * 0.98);
+        if (heartT < 0.05) {
+          f.y = clamp(f.y, h * 0.68, h * 0.98);
+        }
 
-        const glow = 0.35 + Math.sin(tsec * 1.6 + f.phase) * 0.35 + State.pulse * 0.05;
+        if (heartT > 0.01) {
+          const hp = heartPoint(f.heartAngle, heartCx, heartCy, heartScale);
+          f.x = lerp(f.x, hp.x, 0.05 + heartT * 0.06);
+          f.y = lerp(f.y, hp.y, 0.05 + heartT * 0.06);
+        }
+
+        const glow =
+          0.35 + Math.sin(tsec * 1.6 + f.phase) * 0.35 + State.pulse * 0.05 + heartT * 0.25;
         if (glow < 0.15) continue;
         ctx.globalAlpha = clamp(glow, 0, 1);
-        ctx.fillStyle = "#FFD89C";
-        ctx.shadowColor = "#FFD89C";
-        ctx.shadowBlur = 8;
+        ctx.fillStyle = heartT > 0.3 ? "#FFC7D6" : "#FFD89C";
+        ctx.shadowColor = heartT > 0.3 ? "#FFC7D6" : "#FFD89C";
+        ctx.shadowBlur = 8 + heartT * 8;
         ctx.beginPath();
-        ctx.arc(f.x, f.y, 1.6, 0, TAU);
+        ctx.arc(f.x, f.y, 1.6 + heartT * 0.6, 0, TAU);
         ctx.fill();
       }
       ctx.shadowBlur = 0;
@@ -956,6 +1015,156 @@
         resize();
         buildFireflies();
       });
+    }
+
+    return { init, draw };
+  })();
+
+  /*================================================================
+    6b. PETAL ENGINE — soft falling blossom petals
+  ================================================================*/
+  const PetalEngine = (() => {
+    let canvas, ctx, w, h;
+    let petals = [];
+
+    const COLORS = ["#FFD9C0", "#FFC9D6", "#F7B7A3", "#FFE3C7"];
+
+    function resize() {
+      canvas.width = w = window.innerWidth * devicePixelRatio;
+      canvas.height = h = window.innerHeight * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      w = window.innerWidth;
+      h = window.innerHeight;
+    }
+
+    function spawnPetal(fromTop) {
+      return {
+        x: rand(0, w),
+        y: fromTop ? rand(-h * 0.3, 0) : rand(0, h),
+        size: rand(5, 10),
+        vy: rand(0.28, 0.6),
+        swaySpeed: rand(0.3, 0.7),
+        swayPhase: rand(0, TAU),
+        rot: rand(0, TAU),
+        rotSpeed: rand(-0.01, 0.01),
+        color: COLORS[randInt(0, COLORS.length - 1)],
+        alpha: rand(0.35, 0.75),
+      };
+    }
+
+    function build() {
+      petals = [];
+      for (let i = 0; i < CONFIG.petalCount; i++) petals.push(spawnPetal(false));
+    }
+
+    function drawPetal(p) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.moveTo(0, -p.size);
+      ctx.quadraticCurveTo(p.size * 0.9, -p.size * 0.2, 0, p.size);
+      ctx.quadraticCurveTo(-p.size * 0.9, -p.size * 0.2, 0, -p.size);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      if (!State.began) return;
+      const tsec = State.elapsed / 1000;
+      for (const p of petals) {
+        p.y += p.vy * (0.5 + State.wind * 0.8);
+        p.x += Math.sin(tsec * p.swaySpeed + p.swayPhase) * 0.35 * (0.4 + State.wind);
+        p.rot += p.rotSpeed * (0.5 + State.wind);
+        if (p.y > h + 20) Object.assign(p, spawnPetal(true));
+        drawPetal(p);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function init() {
+      canvas = document.createElement("canvas");
+      canvas.id = "petals-canvas";
+      document.getElementById("world").appendChild(canvas);
+      ctx = canvas.getContext("2d");
+      resize();
+      build();
+      window.addEventListener("resize", resize);
+    }
+
+    return { init, draw };
+  })();
+
+  /*================================================================
+    6c. STARDUST ENGINE — a trail of gold sparkle dust follows the cursor
+  ================================================================*/
+  const StardustEngine = (() => {
+    let canvas, ctx, w, h;
+    let particles = [];
+    let lastSpawn = { x: -9999, y: -9999 };
+
+    function resize() {
+      canvas.width = w = window.innerWidth * devicePixelRatio;
+      canvas.height = h = window.innerHeight * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      w = window.innerWidth;
+      h = window.innerHeight;
+    }
+
+    function spawn(x, y) {
+      const n = randInt(1, 2);
+      for (let i = 0; i < n; i++) {
+        particles.push({
+          x: x + rand(-4, 4),
+          y: y + rand(-4, 4),
+          vx: rand(-0.25, 0.25),
+          vy: rand(-0.6, -0.15),
+          size: rand(0.8, 2.2),
+          life: 1,
+          decay: rand(0.012, 0.022),
+        });
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      if (!State.began) return;
+
+      const mx = State.mouse.x;
+      const my = State.mouse.y;
+      const moved = dist(mx, my, lastSpawn.x, lastSpawn.y) > 6;
+      if (moved && mx > -100 && my > -100) {
+        spawn(mx, my);
+        lastSpawn = { x: mx, y: my };
+      }
+
+      particles = particles.filter((p) => p.life > 0);
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        ctx.globalAlpha = clamp(p.life, 0, 1) * 0.9;
+        ctx.fillStyle = p.life > 0.5 ? "#FFF3D9" : "#FFD89C";
+        ctx.shadowColor = "#FFD89C";
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, TAU);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    function init() {
+      canvas = document.createElement("canvas");
+      canvas.id = "stardust-canvas";
+      document.getElementById("world").appendChild(canvas);
+      ctx = canvas.getContext("2d");
+      resize();
+      window.addEventListener("resize", resize);
     }
 
     return { init, draw };
@@ -1074,6 +1283,7 @@
       btn.addEventListener("click", () => {
         if (State.began) return;
         State.began = true;
+        State.beganAt = State.now;
         if (intro) {
           intro.style.transition = "opacity 1.6s ease";
           intro.style.opacity = "0";
@@ -1137,6 +1347,22 @@
     });
   }
 
+  // Warm, irregular flicker for the moon's box-shadow glow — layered
+  // sines plus a touch of randomness so it reads as candlelight
+  // rather than a mechanical pulse.
+  function applyCandleFlicker() {
+    const moonEl = document.getElementById("moon");
+    if (!moonEl) return;
+    const t = State.elapsed / 1000;
+    const flicker =
+      1 +
+      Math.sin(t * 1.7) * 0.05 +
+      Math.sin(t * 4.3 + 1.1) * 0.035 +
+      Math.sin(t * 9.1 + 2.7) * 0.02 +
+      (Math.random() - 0.5) * 0.015;
+    moonEl.style.setProperty("--candle", flicker.toFixed(3));
+  }
+
   function applyBreathingZoom() {
     const world = document.getElementById("world");
     if (!world) return;
@@ -1151,8 +1377,11 @@
     ConstellationEngine.draw();
     WaterEngine.draw();
     AtmosphereEngine.draw();
+    PetalEngine.draw();
+    StardustEngine.draw();
     WorldEngine.tick();
     applyBreathingZoom();
+    applyCandleFlicker();
     requestAnimationFrame(frame);
   }
 
@@ -1163,6 +1392,8 @@
     ConstellationEngine.init();
     WaterEngine.init();
     AtmosphereEngine.init();
+    PetalEngine.init();
+    StardustEngine.init();
     WorldEngine.init();
     runEntranceSequence();
     requestAnimationFrame(frame);
