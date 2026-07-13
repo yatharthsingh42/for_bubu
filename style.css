@@ -174,9 +174,9 @@ body{
     );
 
     box-shadow:
-        0 0 35px rgba(255,230,170,.28),
-        0 0 80px rgba(255,215,130,.18),
-        0 0 160px rgba(255,200,110,.08);
+        0 0 calc(35px * var(--candle, 1)) rgba(255,230,170,.28),
+        0 0 calc(80px * var(--candle, 1)) rgba(255,215,130,.18),
+        0 0 calc(160px * var(--candle, 1)) rgba(255,200,110,.08);
 
     animation:moonFloat 10s ease-in-out infinite;
 
