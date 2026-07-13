@@ -3,7 +3,7 @@
    PART 1
    Dynamic Starfield
 ========================================================== */
-
+let skyRotation = 0;
 const canvas = document.getElementById("stars");
 const ctx = canvas.getContext("2d");
 
@@ -28,66 +28,133 @@ window.addEventListener("resize", resizeCanvas);
 
 class Star {
 
-    constructor() {
+    constructor(x, y, radius, type = "small") {
 
-        this.reset();
+        this.x = x;
+        this.y = y;
 
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height * 0.75;
+        this.radius = radius;
+        this.type = type;
+
+        this.phase = Math.random() * Math.PI * 2;
+
+        this.speed = 0.3 + Math.random() * 1.5;
+
+        this.alpha = 0.4 + Math.random() * 0.6;
+
+        this.rotation = Math.random() * Math.PI;
+
+        const colours = [
+
+            "#FFFFFF",
+            "#F7F8FF",
+            "#E6EEFF",
+            "#FFF5DE"
+
+        ];
+
+        this.colour =
+            colours[
+                Math.floor(
+                    Math.random() * colours.length
+                )
+            ];
 
     }
 
-    reset() {
 
-        this.radius = Math.random() * 1.8 + 0.2;
-
-        this.alpha = Math.random();
-
-        this.speed = 0.004 + Math.random() * 0.012;
-
-        this.offset = Math.random() * Math.PI * 2;
-
-    }
 
     update(time) {
 
-        this.alpha =
-
-            0.55 +
+        const pulse =
 
             Math.sin(
 
-                time * this.speed + this.offset
+                time * 0.001 * this.speed +
 
-            ) * 0.45;
+                this.phase
+
+            );
+
+        this.alpha =
+
+            0.45 +
+
+            pulse * 0.25;
 
     }
 
+
+
     draw() {
+
+        ctx.save();
+
+        ctx.translate(this.x, this.y);
+
+        ctx.rotate(this.rotation);
+
+        ctx.strokeStyle = this.colour;
+
+        ctx.globalAlpha = this.alpha;
+
+        if(this.type==="hero"){
+
+            ctx.shadowBlur=18;
+
+        }
+
+        else if(this.type==="medium"){
+
+            ctx.shadowBlur=8;
+
+        }
+
+        else{
+
+            ctx.shadowBlur=3;
+
+        }
+
+        ctx.shadowColor=this.colour;
+
+
 
         ctx.beginPath();
 
-        ctx.arc(
+        ctx.moveTo(0,-this.radius);
 
-            this.x,
-            this.y,
-            this.radius,
-            0,
-            Math.PI * 2
+        ctx.lineTo(this.radius,0);
 
-        );
+        ctx.lineTo(0,this.radius);
 
-        ctx.fillStyle =
-
-            `rgba(255,255,255,${this.alpha})`;
-
-        ctx.shadowBlur = 10;
-
-        ctx.shadowColor = "#A5D9FF";
-
-        ctx.fill();
+        ctx.lineTo(-this.radius,0);
 
         ctx.closePath();
+        ctx.fillStyle = this.colour;
+        ctx.fill();
+
+        ctx.stroke();
+
+
+
+        if(this.type==="hero"){
+
+            ctx.beginPath();
+
+            ctx.moveTo(-this.radius*2,0);
+
+            ctx.lineTo(this.radius*2,0);
+
+            ctx.moveTo(0,-this.radius*2);
+
+            ctx.lineTo(0,this.radius*2);
+
+            ctx.stroke();
+
+        }
+
+        ctx.restore();
 
     }
 
@@ -99,15 +166,112 @@ class Star {
    CREATE STARS
 ========================================================== */
 
-function createStars() {
+function createStars(){
 
-    stars = [];
+    stars=[];
 
-    for (let i = 0; i < STAR_COUNT; i++) {
+    const clusters=[];
+
+    for(let i=0;i<8;i++){
+
+        clusters.push({
+
+            x:Math.random()*canvas.width,
+
+            y:Math.random()*canvas.height*.65
+
+        });
+
+    }
+
+
+
+    for(let i=0;i<STAR_COUNT;i++){
+
+        let x;
+        let y;
+
+        if(Math.random()<0.65){
+
+            const c=
+
+            clusters[
+
+                Math.floor(
+
+                    Math.random()*clusters.length
+
+                )
+
+            ];
+
+           x = Math.max(
+    0,
+    Math.min(
+        canvas.width,
+        c.x + (Math.random()-0.5)*250
+    )
+);
+
+y = Math.max(
+    0,
+    Math.min(
+        canvas.height*0.75,
+        c.y + (Math.random()-0.5)*180
+    )
+);
+
+        }
+
+        else{
+
+            x=Math.random()*canvas.width;
+
+            y=Math.random()*canvas.height*.75;
+
+        }
+
+
+
+        let radius=.5+Math.random();
+
+        let type="small";
+
+
+
+        if(Math.random()<.12){
+
+            radius=1.4;
+
+            type="medium";
+
+        }
+
+
+
+        if(Math.random()<.02){
+
+            radius=2.4;
+
+            type="hero";
+
+        }
+
+
 
         stars.push(
 
-            new Star()
+            new Star(
+
+                x,
+
+                y,
+
+                radius,
+
+                type
+
+            )
 
         );
 
@@ -159,7 +323,7 @@ function drawBigStars(time) {
 
             `rgba(220,235,255,${0.5 + pulse * 0.5})`;
 
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = this.radius * 8;
 
         ctx.shadowColor = "#A8D8FF";
 
@@ -244,6 +408,29 @@ function animate(time) {
 
     );
 
+   skyRotation += 0.00001;
+
+ctx.save();
+
+ctx.translate(
+
+    canvas.width/2,
+
+    canvas.height/2
+
+);
+
+ctx.rotate(skyRotation);
+
+ctx.translate(
+
+    -canvas.width/2,
+
+    -canvas.height/2
+
+);
+   
+
     drawMilkyWay();
 
     for (let star of stars) {
@@ -255,6 +442,7 @@ function animate(time) {
     }
 
     drawBigStars(time);
+   ctx.restore();
 
     requestAnimationFrame(
 
