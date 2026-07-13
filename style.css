@@ -1,6 +1,6 @@
-/* ============================================
-   RESET
-============================================ */
+/*==================================================
+                RESET
+==================================================*/
 
 *{
     margin:0;
@@ -8,48 +8,50 @@
     box-sizing:border-box;
 }
 
-html{
-    scroll-behavior:smooth;
-}
-
+html,
 body{
-    width:100vw;
-    height:100vh;
+
+    width:100%;
+    height:100%;
     overflow:hidden;
+
     font-family:"Inter",sans-serif;
-    background:#050B18;
+
+    background:#02050B;
+
 }
 
-
-
-/* ============================================
-   COLORS
-============================================ */
+/*==================================================
+                COLORS
+==================================================*/
 
 :root{
 
-    --night:#050B18;
-    --night2:#08182E;
-    --night3:#10294A;
+    --sky-top:#02050B;
+    --sky-middle:#091524;
+    --sky-bottom:#183C63;
 
-    --moon:#F5F8FF;
+    --water-dark:#07111B;
+    --water-light:#163C5D;
 
-    --text:#EEF4FF;
-    --muted:#AEBBD1;
+    --moon:#EEF4F9;
 
-    --gold:#FFD98F;
+    --text:#F8F3EA;
+    --muted:#CFC6B7;
+
+    --gold:#FFD89C;
 
 }
 
 
-
-/* ============================================
-   WORLD
-============================================ */
+/*==================================================
+                WORLD
+==================================================*/
 
 #world{
 
     position:relative;
+
     width:100vw;
     height:100vh;
 
@@ -58,34 +60,33 @@ body{
     background:
 
     radial-gradient(
-        ellipse at top,
-        rgba(50,90,180,.14) 0%,
-        rgba(50,90,180,0) 45%
-    ),
-
-    radial-gradient(
-        circle at 78% 14%,
-        rgba(120,180,255,.06) 0%,
+        circle at 78% 18%,
+        rgba(180,215,255,.05),
         transparent 26%
     ),
 
+    radial-gradient(
+        ellipse at center bottom,
+        rgba(70,120,200,.18),
+        transparent 62%
+    ),
+
     linear-gradient(
+
         to bottom,
 
-        #01030A 0%,
-        #040914 18%,
-        #071321 40%,
-        #0B1D38 70%,
-        #071728 100%
+        var(--sky-top) 0%,
+        var(--sky-middle) 42%,
+        var(--sky-bottom) 100%
+
     );
 
 }
 
 
-
-/* ============================================
-   SKY
-============================================ */
+/*==================================================
+                SKY
+==================================================*/
 
 #sky{
 
@@ -94,82 +95,55 @@ body{
 
 }
 
-
-
-/* ============================================
-   STARS
-============================================ */
-
-#stars{
-
-    position:absolute;
-
-    inset:0;
-
-    width:100%;
-    height:100%;
-
-}
-
-
-
-/* ============================================
-   CONSTELLATIONS
-============================================ */
-
+#stars,
 #constellations{
 
     position:absolute;
-    inset:0;
 
-    pointer-events:none;
+    inset:0;
 
 }
 
 
-
-/* ============================================
-   MOON
-============================================ */
+/*==================================================
+                MOON
+==================================================*/
 
 #moon{
 
     position:absolute;
 
-    width:340px;
-    height:340px;
+    width:270px;
+    height:270px;
 
-    top:40px;
-    right:55px;
+    top:55px;
+    right:70px;
 
     border-radius:50%;
 
     background:
 
     radial-gradient(
+
         circle at 35% 35%,
 
-        #F8FAFF 0%,
-        #EEF5FF 42%,
-        #DCEBFF 72%,
-        #BDD6FF 100%
+        #FFFFFF 0%,
+        #F5F8FC 45%,
+        #DDE9F7 75%,
+        #BDD2E9 100%
+
     );
 
     box-shadow:
 
-        0 0 28px rgba(190,225,255,.45),
-        0 0 75px rgba(160,205,255,.18),
-        0 0 140px rgba(120,170,255,.08);
+        0 0 22px rgba(200,225,255,.28),
+        0 0 70px rgba(150,195,255,.12);
 
-    animation:moonFloat 8s ease-in-out infinite;
+    animation:moonFloat 12s ease-in-out infinite;
 
 }
 
-
-
-/* ============================================
-   MOON HALO
-============================================ */
+/* Moon Glow */
 
 #moon::before{
 
@@ -177,31 +151,29 @@ body{
 
     position:absolute;
 
-    inset:-45px;
+    inset:-35px;
 
     border-radius:50%;
 
     background:
 
     radial-gradient(
+
         circle,
 
-        rgba(140,190,255,.18),
+        rgba(180,210,255,.15),
 
         transparent 72%
+
     );
 
-    filter:blur(20px);
+    filter:blur(18px);
 
     z-index:-1;
 
 }
 
-
-
-/* ============================================
-   MOON TEXTURE
-============================================ */
+/* Moon Texture */
 
 #moon::after{
 
@@ -213,442 +185,441 @@ body{
 
     border-radius:50%;
 
-    opacity:.22;
+    opacity:.16;
 
     background-image:
 
-    radial-gradient(
-        circle at 22% 28%,
-        rgba(170,190,220,.40) 2%,
-        transparent 4%
-    ),
+    radial-gradient(circle at 28% 28%,
+    rgba(170,180,195,.35) 3%,
+    transparent 4%),
 
-    radial-gradient(
-        circle at 68% 35%,
-        rgba(170,190,220,.35) 5%,
-        transparent 6%
-    ),
+    radial-gradient(circle at 62% 42%,
+    rgba(170,180,195,.28) 4%,
+    transparent 5%),
 
-    radial-gradient(
-        circle at 56% 72%,
-        rgba(170,190,220,.28) 4%,
-        transparent 5%
-    ),
+    radial-gradient(circle at 45% 70%,
+    rgba(170,180,195,.24) 5%,
+    transparent 6%);
 
-    radial-gradient(
-        circle at 35% 60%,
-        rgba(170,190,220,.22) 6%,
-        transparent 7%
+}
+
+
+/*==================================================
+                MOUNTAINS
+==================================================*/
+
+#mountains{
+
+    position:absolute;
+
+    bottom:34%;
+
+    width:100%;
+    height:170px;
+
+    opacity:.18;
+
+    background:
+
+    linear-gradient(
+
+        to top,
+
+        rgba(5,8,14,.95),
+
+        rgba(18,33,53,.85)
+
+    );
+
+    clip-path:polygon(
+
+        0% 100%,
+
+        0% 72%,
+
+        10% 64%,
+
+        20% 70%,
+
+        35% 52%,
+
+        50% 74%,
+
+        65% 55%,
+
+        80% 69%,
+
+        92% 60%,
+
+        100% 72%,
+
+        100% 100%
+
+    );
+
+}
+
+
+/*==================================================
+                LAKE
+==================================================*/
+
+#lake{
+
+    position:absolute;
+
+    bottom:0;
+
+    width:100%;
+    height:40%;
+
+    overflow:hidden;
+
+    background:
+
+    linear-gradient(
+
+        to bottom,
+
+        rgba(28,68,110,.12),
+
+        var(--water-light) 30%,
+
+        var(--water-dark) 100%
+
+    );
+
+}
+
+
+/*==================================================
+                WATER CANVAS
+==================================================*/
+
+#water{
+
+    position:absolute;
+
+    inset:0;
+
+}
+
+
+/*==================================================
+                REFLECTION
+==================================================*/
+
+#reflection{
+
+    position:absolute;
+
+    top:-10px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    width:170px;
+    height:280px;
+
+    background:
+
+    linear-gradient(
+
+        to bottom,
+
+        rgba(240,245,255,.30),
+
+        rgba(210,225,255,.12),
+
+        transparent
+
+    );
+
+    filter:blur(45px);
+
+    opacity:.22;
+
+}
+
+/*==================================================
+                FOREGROUND
+==================================================*/
+
+#foreground{
+
+    position:absolute;
+
+    inset:0;
+
+    pointer-events:none;
+
+    z-index:8;
+
+}
+
+/* Left Tree */
+
+#left-tree{
+
+    position:absolute;
+
+    bottom:0;
+    left:-70px;
+
+    width:220px;
+    height:55%;
+
+    background:linear-gradient(
+
+        to top,
+
+        #020202,
+
+        #09131B
+
+    );
+
+    opacity:.85;
+
+    clip-path:polygon(
+
+        45% 100%,
+        52% 18%,
+        58% 100%
+
+    );
+
+}
+
+/* Right Tree */
+
+#right-tree{
+
+    position:absolute;
+
+    bottom:0;
+    right:-70px;
+
+    width:220px;
+    height:58%;
+
+    background:linear-gradient(
+
+        to top,
+
+        #020202,
+
+        #09131B
+
+    );
+
+    opacity:.85;
+
+    clip-path:polygon(
+
+        42% 100%,
+        48% 15%,
+        55% 100%
+
     );
 
 }
 
 
 
-/* ============================================
-   MOON FLOAT
-============================================ */
-
-@keyframes moonFloat{
-
-    0%{
-        transform:translateY(0px);
-    }
-
-    50%{
-        transform:translateY(8px);
-    }
-
-    100%{
-        transform:translateY(0px);
-    }
-
-}
-
-
-/* ============================================
-   MOUNTAINS
-============================================ */
-
-#mountains{
-
-position:absolute;
-
-bottom:28%;
-
-width:100%;
-height:260px;
-
-background:
-
-linear-gradient(
-to top,
-
-#08101E,
-
-#12294D);
-
-clip-path:
-
-polygon(
-
-0 100%,
-
-0 65%,
-
-10% 55%,
-
-20% 70%,
-
-35% 45%,
-
-50% 72%,
-
-65% 48%,
-
-80% 66%,
-
-90% 54%,
-
-100% 70%,
-
-100% 100%
-
-);
-
-opacity:.65;
-
-}
-
-
-
-/* ============================================
-   LAKE
-============================================ */
-
-#lake{
-
-position:absolute;
-
-bottom:0;
-
-width:100%;
-
-height:42%;
-
-background:
-
-linear-gradient(
-
-to bottom,
-
-rgba(40,90,160,.05),
-
-#071728,
-
-#04101C);
-
-overflow:hidden;
-
-}
-
-
-
-/* Water */
-
-#water{
-
-position:absolute;
-
-width:100%;
-height:100%;
-
-}
-
-
-
-/* Reflection */
-
-#reflection{
-
-position:absolute;
-
-top:-30px;
-
-left:50%;
-
-transform:translateX(-50%);
-
-width:140px;
-
-height:320px;
-
-background:
-
-linear-gradient(
-
-to bottom,
-
-rgba(180,220,255,.55),
-
-transparent);
-
-filter:blur(40px);
-
-opacity:.35;
-
-}
-
-
-
-/* ============================================
-   FOREGROUND
-============================================ */
-
-#foreground{
-
-position:absolute;
-
-bottom:0;
-
-width:100%;
-height:100%;
-
-pointer-events:none;
-
-}
-
-
-
-/* Placeholder Trees */
-
-#left-tree,
-#right-tree{
-
-position:absolute;
-
-bottom:0;
-
-width:240px;
-
-height:65%;
-
-background:
-
-linear-gradient(
-
-to top,
-
-#020202,
-
-#081118);
-
-filter:blur(1px);
-
-opacity:.9;
-
-}
-
-#left-tree{
-
-left:-60px;
-
-clip-path:
-
-polygon(
-35% 100%,
-42% 15%,
-48% 100%
-);
-
-}
-
-#right-tree{
-
-right:-60px;
-
-clip-path:
-
-polygon(
-52% 100%,
-58% 10%,
-65% 100%
-);
-
-}
-
-
-
-/* ============================================
-   MIST
-============================================ */
+/*==================================================
+                MIST
+==================================================*/
 
 #mist{
 
-position:absolute;
+    position:absolute;
 
-bottom:18%;
+    bottom:28%;
 
-width:200%;
+    width:200%;
+    height:140px;
 
-height:180px;
+    left:-40%;
 
-background:
+    background:
 
-radial-gradient(circle,
+    radial-gradient(
 
-rgba(200,230,255,.08),
+        ellipse,
 
-transparent 70%);
+        rgba(255,255,255,.08),
 
-filter:blur(60px);
+        transparent 70%
 
-animation:
+    );
 
-mistMove 35s linear infinite;
+    filter:blur(55px);
+
+    opacity:.45;
+
+    animation:fogMove 45s linear infinite;
 
 }
 
 
 
-/* ============================================
-   INTRO
-============================================ */
+/*==================================================
+                INTRO
+==================================================*/
 
 #intro{
 
-position:absolute;
+    position:absolute;
 
-inset:0;
+    left:9%;
+    top:48%;
 
-display:flex;
+    transform:translateY(-50%);
 
-flex-direction:column;
+    display:flex;
 
-justify-content:center;
+    flex-direction:column;
 
-align-items:center;
+    align-items:flex-start;
 
-color:var(--text);
+    color:var(--text);
 
-text-align:center;
-
-z-index:20;
-
-pointer-events:none;
+    z-index:20;
 
 }
 
 .title{
 
-font-size:4rem;
+    font-family:"Cormorant Garamond",serif;
 
-font-family:"Cormorant Garamond",serif;
+    font-size:4.4rem;
 
-font-weight:500;
+    line-height:1;
 
-letter-spacing:2px;
+    font-weight:500;
 
-text-shadow:
+    letter-spacing:1px;
 
-0 0 20px rgba(255,255,255,.15);
+    color:var(--text);
+
+    text-shadow:
+
+        0 0 20px rgba(255,255,255,.08);
 
 }
 
 .subtitle{
 
-margin-top:15px;
+    margin-top:24px;
 
-font-size:1.1rem;
+    width:420px;
 
-color:var(--muted);
+    line-height:1.8;
 
-letter-spacing:3px;
+    color:var(--muted);
+
+    font-size:1rem;
+
+    letter-spacing:2px;
 
 }
 
+/* Button */
+
 #begin{
 
-margin-top:50px;
+    margin-top:45px;
 
-padding:14px 38px;
+    padding:15px 42px;
 
-background:rgba(255,255,255,.08);
+    border:none;
 
-border:1px solid rgba(255,255,255,.2);
+    outline:none;
 
-border-radius:40px;
+    cursor:pointer;
 
-color:white;
+    border-radius:40px;
 
-font-size:15px;
+    font-size:15px;
 
-backdrop-filter:blur(12px);
+    color:#1B1B1B;
 
-cursor:pointer;
+    background:var(--gold);
 
-pointer-events:auto;
+    transition:.35s;
 
-transition:.35s;
+    box-shadow:
+
+        0 10px 35px rgba(255,215,150,.18);
 
 }
 
 #begin:hover{
 
-transform:translateY(-3px);
+    transform:translateY(-3px);
 
-background:rgba(255,255,255,.14);
+    box-shadow:
+
+        0 18px 40px rgba(255,215,150,.28);
 
 }
 
 
 
-/* ============================================
-   ANIMATIONS
-============================================ */
+/*==================================================
+                AUDIO
+==================================================*/
+
+audio{
+
+    display:none;
+
+}
+
+
+
+/*==================================================
+                ANIMATIONS
+==================================================*/
 
 @keyframes moonFloat{
 
-0%{
+    0%{
 
-transform:
-translateX(-50%)
-translateY(0);
+        transform:translateY(0px);
 
-}
+    }
 
-50%{
+    50%{
 
-transform:
-translateX(-50%)
-translateY(10px);
+        transform:translateY(6px);
 
-}
+    }
 
-100%{
+    100%{
 
-transform:
-translateX(-50%)
-translateY(0);
+        transform:translateY(0px);
 
-}
+    }
 
 }
 
 
 
-@keyframes mistMove{
+@keyframes fogMove{
 
-0%{
+    from{
 
-transform:translateX(-20%);
+        transform:translateX(0);
 
-}
+    }
 
-100%{
+    to{
 
-transform:translateX(0%);
+        transform:translateX(15%);
 
-}
+    }
 
 }
