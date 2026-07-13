@@ -1,5 +1,5 @@
 /* ============================================
-   GOOGLE RESET
+   RESET
 ============================================ */
 
 *{
@@ -13,16 +13,11 @@ html{
 }
 
 body{
-
     width:100vw;
     height:100vh;
-
     overflow:hidden;
-
     font-family:"Inter",sans-serif;
-
     background:#050B18;
-
 }
 
 
@@ -37,7 +32,7 @@ body{
     --night2:#08182E;
     --night3:#10294A;
 
-    --moon:#F4F7FF;
+    --moon:#F5F8FF;
 
     --text:#EEF4FF;
     --muted:#AEBBD1;
@@ -57,30 +52,31 @@ body{
     position:relative;
     width:100vw;
     height:100vh;
+
     overflow:hidden;
 
     background:
 
     radial-gradient(
         ellipse at top,
-        rgba(45,85,170,.18) 0%,
-        rgba(45,85,170,0) 45%
+        rgba(50,90,180,.14) 0%,
+        rgba(50,90,180,0) 45%
     ),
 
     radial-gradient(
-        circle at 78% 12%,
-        rgba(120,180,255,.08) 0%,
-        transparent 28%
+        circle at 78% 14%,
+        rgba(120,180,255,.06) 0%,
+        transparent 26%
     ),
 
     linear-gradient(
         to bottom,
 
         #01030A 0%,
-        #040A16 18%,
-        #081323 38%,
-        #0A1D38 70%,
-        #071729 100%
+        #040914 18%,
+        #071321 40%,
+        #0B1D38 70%,
+        #071728 100%
     );
 
 }
@@ -94,7 +90,6 @@ body{
 #sky{
 
     position:absolute;
-
     inset:0;
 
 }
@@ -125,7 +120,6 @@ body{
 #constellations{
 
     position:absolute;
-
     inset:0;
 
     pointer-events:none;
@@ -138,10 +132,6 @@ body{
    MOON
 ============================================ */
 
-/* ============================================
-   MOON
-============================================ */
-
 #moon{
 
     position:absolute;
@@ -149,24 +139,30 @@ body{
     width:340px;
     height:340px;
 
-    top:-80px;
-    right:8%;
+    top:40px;
+    right:55px;
 
     border-radius:50%;
 
     background:
-    radial-gradient(circle at 35% 35%,
-        #FFFFFF 0%,
-        #F5F8FF 40%,
-        #DCEBFF 75%,
-        #BDD8FF 100%);
+
+    radial-gradient(
+        circle at 35% 35%,
+
+        #F8FAFF 0%,
+        #EEF5FF 42%,
+        #DCEBFF 72%,
+        #BDD6FF 100%
+    );
 
     box-shadow:
-        0 0 40px rgba(180,220,255,.65),
-        0 0 100px rgba(150,200,255,.30),
-        0 0 220px rgba(120,170,255,.12);
 
-    animation: moonFloat 8s ease-in-out infinite;
+        0 0 28px rgba(190,225,255,.45),
+        0 0 75px rgba(160,205,255,.18),
+        0 0 140px rgba(120,170,255,.08);
+
+    animation:moonFloat 8s ease-in-out infinite;
+
 }
 
 
@@ -175,37 +171,29 @@ body{
    MOON HALO
 ============================================ */
 
-#moon{
+#moon::before{
+
+    content:"";
 
     position:absolute;
 
-    width:620px;
-    height:620px;
-
-    top:-170px;
-    right:-140px;
+    inset:-45px;
 
     border-radius:50%;
 
     background:
-    radial-gradient(circle at 35% 35%,
 
-        #FFFFFF 0%,
-        #F5F8FF 35%,
-        #DCEBFF 72%,
-        #BDD8FF 100%);
+    radial-gradient(
+        circle,
 
-    box-shadow:
+        rgba(140,190,255,.18),
 
-        0 0 80px rgba(170,220,255,.65),
+        transparent 72%
+    );
 
-        0 0 180px rgba(150,200,255,.30),
+    filter:blur(20px);
 
-        0 0 350px rgba(120,170,255,.12);
-
-    animation:
-
-        moonFloat 9s ease-in-out infinite;
+    z-index:-1;
 
 }
 
@@ -217,33 +205,41 @@ body{
 
 #moon::after{
 
-content:"";
+    content:"";
 
-position:absolute;
+    position:absolute;
 
-inset:0;
+    inset:0;
 
-border-radius:50%;
+    border-radius:50%;
 
-opacity:.25;
+    opacity:.22;
 
-background-image:
+    background-image:
 
-radial-gradient(circle at 22% 28%,
-rgba(170,190,220,.4) 2%,
-transparent 4%),
+    radial-gradient(
+        circle at 22% 28%,
+        rgba(170,190,220,.40) 2%,
+        transparent 4%
+    ),
 
-radial-gradient(circle at 68% 35%,
-rgba(170,190,220,.35) 5%,
-transparent 6%),
+    radial-gradient(
+        circle at 68% 35%,
+        rgba(170,190,220,.35) 5%,
+        transparent 6%
+    ),
 
-radial-gradient(circle at 55% 72%,
-rgba(170,190,220,.28) 4%,
-transparent 5%),
+    radial-gradient(
+        circle at 56% 72%,
+        rgba(170,190,220,.28) 4%,
+        transparent 5%
+    ),
 
-radial-gradient(circle at 35% 60%,
-rgba(170,190,220,.22) 6%,
-transparent 7%);
+    radial-gradient(
+        circle at 35% 60%,
+        rgba(170,190,220,.22) 6%,
+        transparent 7%
+    );
 
 }
 
@@ -255,26 +251,19 @@ transparent 7%);
 
 @keyframes moonFloat{
 
-0%{
+    0%{
+        transform:translateY(0px);
+    }
 
-transform:translateY(0px);
+    50%{
+        transform:translateY(8px);
+    }
 
-}
-
-50%{
-
-transform:translateY(12px);
-
-}
-
-100%{
-
-transform:translateY(0px);
+    100%{
+        transform:translateY(0px);
+    }
 
 }
-
-}
-
 
 
 /* ============================================
