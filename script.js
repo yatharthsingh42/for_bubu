@@ -51,6 +51,23 @@
 
     petalCount: 26,
 
+    // The "wow" moment: when the fireflies finish gathering into a
+    // heart, they burst into lanterns — each carrying one photo —
+    // that drift up and settle among the stars. Replace the src
+    // paths with your own images (put them in an assets/photos/
+    // folder next to your HTML file) and write real captions.
+    photos: [
+      { src: "assets/photos/1.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/2.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/3.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/4.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/5.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/6.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/7.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/8.jpg", caption: "Add a caption for this memory." },
+    ],
+    lanternRiseDurationMs: 7000, // how long each lantern takes to float to its resting spot
+
     entranceDurationMs: 5200, // how long the "sky waking up" takes
     zoomPeriodMs: 30000, // whole-scene breathing zoom, one cycle
     zoomAmplitude: 0.0075, // scale oscillates between 1 and 1+2*amp
@@ -152,6 +169,43 @@
         text-transform: uppercase;
         color: var(--muted, #CFC6B7);
         opacity: .6;
+      }
+      .memory-panel img {
+        max-width: 100%;
+        border-radius: 10px;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.4);
+      }
+      .lantern {
+        position: absolute;
+        width: 74px; height: 74px;
+        left: 0; top: 0;
+        z-index: 17;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 1.4s ease;
+      }
+      .lantern.visible { opacity: 1; pointer-events: auto; }
+      .lantern-glow {
+        position: absolute; inset: -14px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,216,156,.55), rgba(255,190,140,.15) 55%, transparent 75%);
+        filter: blur(6px);
+        animation: lanternPulse 3.6s ease-in-out infinite;
+      }
+      .lantern-photo {
+        position: absolute; inset: 0;
+        border-radius: 50%;
+        background-size: cover;
+        background-position: center;
+        background-color: rgba(255,230,190,.12);
+        border: 2px solid rgba(255, 230, 190, .85);
+        box-shadow: 0 0 22px rgba(255, 200, 140, .45), inset 0 0 14px rgba(0,0,0,.25);
+      }
+      @keyframes lanternPulse {
+        0%, 100% { opacity: .7; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.08); }
       }
       #world { cursor: default; transform-origin: 50% 50%; will-change: transform; }
       #world.sky-interactive #sky { cursor: crosshair; }
@@ -859,6 +913,7 @@
     let flies = [];
     let clouds = [];
     let mistEl;
+    let lanternsTriggered = false;
 
     function resize() {
       canvas.width = w = window.innerWidth * devicePixelRatio;
@@ -941,6 +996,11 @@
       const heartCy = h * 0.46;
       const heartScale = Math.min(w, h) * 0.011;
 
+      if (heartT > 0.92 && !lanternsTriggered) {
+        lanternsTriggered = true;
+        LanternEngine.release(heartCx, heartCy);
+      }
+
       // fireflies — confined to lower third, near the lake
       for (const f of flies) {
         f.vx += rand(-0.02, 0.02);
@@ -1018,6 +1078,115 @@
     }
 
     return { init, draw };
+  })();
+
+  /*================================================================
+    6a. LANTERN ENGINE — photos carried up as lanterns, the big reveal
+  ================================================================*/
+  const LanternEngine = (() => {
+    let lanterns = [];
+    let panel;
+    let released = false;
+
+    function buildLanterns() {
+      const world = document.getElementById("world");
+      lanterns = CONFIG.photos.map((p) => {
+        const el = document.createElement("div");
+        el.className = "lantern";
+        const glow = document.createElement("div");
+        glow.className = "lantern-glow";
+        const photo = document.createElement("div");
+        photo.className = "lantern-photo";
+        photo.style.backgroundImage = `url("${p.src}")`;
+        el.appendChild(glow);
+        el.appendChild(photo);
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          showPhoto(p);
+        });
+        world.appendChild(el);
+        return {
+          el,
+          x: 0,
+          y: 0,
+          startX: 0,
+          startY: 0,
+          targetX: 0,
+          targetY: 0,
+          releaseAt: 0,
+          phase: rand(0, TAU),
+        };
+      });
+    }
+
+    function showPhoto(p) {
+      panel.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = p.src;
+      img.alt = "";
+      const cap = document.createElement("p");
+      cap.textContent = p.caption;
+      const hint = document.createElement("span");
+      hint.className = "close-hint";
+      hint.textContent = "click anywhere to close";
+      panel.appendChild(img);
+      panel.appendChild(cap);
+      panel.appendChild(hint);
+      panel.classList.add("visible");
+    }
+
+    function hidePhoto() {
+      panel.classList.remove("visible");
+    }
+
+    // Called once, right when the firefly heart fully forms — scatters
+    // resting spots across the upper sky (avoiding the moon's corner)
+    // and staggers each lantern's launch for a cascading rise.
+    function release(originX, originY) {
+      if (released) return;
+      released = true;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const n = lanterns.length;
+      const cols = Math.ceil(n / 2);
+
+      lanterns.forEach((l, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        l.startX = originX;
+        l.startY = originY;
+        l.x = originX;
+        l.y = originY;
+        l.targetX = w * (0.1 + (col / Math.max(1, cols - 1)) * 0.5) + rand(-16, 16);
+        l.targetY = h * (0.14 + row * 0.14) + rand(-12, 12);
+        l.releaseAt = State.now + i * 260;
+        l.el.classList.add("visible");
+      });
+    }
+
+    function tick() {
+      if (!released) return;
+      for (const l of lanterns) {
+        const t = clamp((State.now - l.releaseAt) / CONFIG.lanternRiseDurationMs, 0, 1);
+        const eased = 1 - Math.pow(1 - t, 3); // ease-out
+        l.x = lerp(l.startX, l.targetX, eased);
+        l.y = lerp(l.startY, l.targetY, eased);
+        const bob = t >= 1 ? Math.sin(State.elapsed / 1000 * 0.6 + l.phase) * 5 : 0;
+        l.el.style.transform = `translate(${l.x - 37}px, ${l.y - 37 + bob}px)`;
+      }
+    }
+
+    function init() {
+      buildLanterns();
+      panel = document.createElement("div");
+      panel.className = "memory-panel";
+      document.getElementById("world").appendChild(panel);
+      document.getElementById("world").addEventListener("click", () => {
+        if (panel.classList.contains("visible")) hidePhoto();
+      });
+    }
+
+    return { init, tick, release };
   })();
 
   /*================================================================
@@ -1377,6 +1546,7 @@
     ConstellationEngine.draw();
     WaterEngine.draw();
     AtmosphereEngine.draw();
+    LanternEngine.tick();
     PetalEngine.draw();
     StardustEngine.draw();
     WorldEngine.tick();
@@ -1392,6 +1562,7 @@
     ConstellationEngine.init();
     WaterEngine.init();
     AtmosphereEngine.init();
+    LanternEngine.init();
     PetalEngine.init();
     StardustEngine.init();
     WorldEngine.init();
