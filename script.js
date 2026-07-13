@@ -130,8 +130,8 @@ function drawBigStars(time) {
             Math.sin(i * 12.2) * 80;
 
         const y =
-            60 +
-            Math.cos(i * 6.8) * 50;
+        40 +
+        Math.random()*250;
 
         const pulse =
 
