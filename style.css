@@ -1,0 +1,621 @@
+/* ============================================
+   GOOGLE RESET
+============================================ */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+
+    width:100vw;
+    height:100vh;
+
+    overflow:hidden;
+
+    font-family:"Inter",sans-serif;
+
+    background:#050B18;
+
+}
+
+
+
+/* ============================================
+   COLORS
+============================================ */
+
+:root{
+
+    --night:#050B18;
+    --night2:#08182E;
+    --night3:#10294A;
+
+    --moon:#F4F7FF;
+
+    --text:#EEF4FF;
+    --muted:#AEBBD1;
+
+    --gold:#FFD98F;
+
+}
+
+
+
+/* ============================================
+   WORLD
+============================================ */
+
+#world{
+
+    position:relative;
+
+    width:100vw;
+    height:100vh;
+
+    overflow:hidden;
+
+    background:
+    linear-gradient(
+    to bottom,
+
+    #02050D 0%,
+    #07111E 15%,
+    #0B1830 35%,
+    #10294A 70%,
+    #0A2242 100%);
+
+}
+
+
+
+/* ============================================
+   SKY
+============================================ */
+
+#sky{
+
+    position:absolute;
+
+    inset:0;
+
+}
+
+
+
+/* ============================================
+   STARS
+============================================ */
+
+#stars{
+
+    position:absolute;
+
+    inset:0;
+
+    width:100%;
+    height:100%;
+
+}
+
+
+
+/* ============================================
+   CONSTELLATIONS
+============================================ */
+
+#constellations{
+
+    position:absolute;
+
+    inset:0;
+
+    pointer-events:none;
+
+}
+
+
+
+/* ============================================
+   MOON
+============================================ */
+
+#moon{
+
+    position:absolute;
+
+    width:240px;
+    height:240px;
+
+    border-radius:50%;
+
+    top:8%;
+    left:50%;
+
+    transform:translateX(-50%);
+
+    background:
+
+    radial-gradient(circle at 35% 35%,
+
+    white 0%,
+
+    #F4F7FF 35%,
+
+    #D7E5FF 70%,
+
+    #B6D2FF 100%);
+
+    box-shadow:
+
+    0 0 50px rgba(170,220,255,.8),
+
+    0 0 120px rgba(120,180,255,.5),
+
+    0 0 250px rgba(120,180,255,.25);
+
+    animation:
+
+    moonFloat 8s ease-in-out infinite;
+
+}
+
+
+
+/* Moon Halo */
+
+#moon::before{
+
+content:"";
+
+position:absolute;
+
+inset:-40px;
+
+border-radius:50%;
+
+background:
+
+radial-gradient(circle,
+
+rgba(140,200,255,.25),
+
+transparent 70%);
+
+filter:blur(20px);
+
+z-index:-1;
+
+}
+
+
+
+/* Moon Texture */
+
+#moon::after{
+
+content:"";
+
+position:absolute;
+
+width:100%;
+height:100%;
+
+border-radius:50%;
+
+background-image:
+
+radial-gradient(circle at 25% 25%,
+rgba(190,210,240,.4) 2%,
+transparent 3%),
+
+radial-gradient(circle at 60% 35%,
+rgba(180,205,240,.25) 4%,
+transparent 5%),
+
+radial-gradient(circle at 42% 65%,
+rgba(170,195,230,.25) 5%,
+transparent 6%),
+
+radial-gradient(circle at 70% 72%,
+rgba(180,205,240,.2) 3%,
+transparent 4%);
+
+opacity:.7;
+
+}
+
+
+
+/* ============================================
+   MOUNTAINS
+============================================ */
+
+#mountains{
+
+position:absolute;
+
+bottom:28%;
+
+width:100%;
+height:260px;
+
+background:
+
+linear-gradient(
+to top,
+
+#08101E,
+
+#12294D);
+
+clip-path:
+
+polygon(
+
+0 100%,
+
+0 65%,
+
+10% 55%,
+
+20% 70%,
+
+35% 45%,
+
+50% 72%,
+
+65% 48%,
+
+80% 66%,
+
+90% 54%,
+
+100% 70%,
+
+100% 100%
+
+);
+
+opacity:.65;
+
+}
+
+
+
+/* ============================================
+   LAKE
+============================================ */
+
+#lake{
+
+position:absolute;
+
+bottom:0;
+
+width:100%;
+
+height:42%;
+
+background:
+
+linear-gradient(
+
+to bottom,
+
+rgba(40,90,160,.05),
+
+#071728,
+
+#04101C);
+
+overflow:hidden;
+
+}
+
+
+
+/* Water */
+
+#water{
+
+position:absolute;
+
+width:100%;
+height:100%;
+
+}
+
+
+
+/* Reflection */
+
+#reflection{
+
+position:absolute;
+
+top:-30px;
+
+left:50%;
+
+transform:translateX(-50%);
+
+width:140px;
+
+height:320px;
+
+background:
+
+linear-gradient(
+
+to bottom,
+
+rgba(180,220,255,.55),
+
+transparent);
+
+filter:blur(40px);
+
+opacity:.35;
+
+}
+
+
+
+/* ============================================
+   FOREGROUND
+============================================ */
+
+#foreground{
+
+position:absolute;
+
+bottom:0;
+
+width:100%;
+height:100%;
+
+pointer-events:none;
+
+}
+
+
+
+/* Placeholder Trees */
+
+#left-tree,
+#right-tree{
+
+position:absolute;
+
+bottom:0;
+
+width:240px;
+
+height:65%;
+
+background:
+
+linear-gradient(
+
+to top,
+
+#020202,
+
+#081118);
+
+filter:blur(1px);
+
+opacity:.9;
+
+}
+
+#left-tree{
+
+left:-60px;
+
+clip-path:
+
+polygon(
+35% 100%,
+42% 15%,
+48% 100%
+);
+
+}
+
+#right-tree{
+
+right:-60px;
+
+clip-path:
+
+polygon(
+52% 100%,
+58% 10%,
+65% 100%
+);
+
+}
+
+
+
+/* ============================================
+   MIST
+============================================ */
+
+#mist{
+
+position:absolute;
+
+bottom:18%;
+
+width:200%;
+
+height:180px;
+
+background:
+
+radial-gradient(circle,
+
+rgba(200,230,255,.08),
+
+transparent 70%);
+
+filter:blur(60px);
+
+animation:
+
+mistMove 35s linear infinite;
+
+}
+
+
+
+/* ============================================
+   INTRO
+============================================ */
+
+#intro{
+
+position:absolute;
+
+inset:0;
+
+display:flex;
+
+flex-direction:column;
+
+justify-content:center;
+
+align-items:center;
+
+color:var(--text);
+
+text-align:center;
+
+z-index:20;
+
+pointer-events:none;
+
+}
+
+.title{
+
+font-size:4rem;
+
+font-family:"Cormorant Garamond",serif;
+
+font-weight:500;
+
+letter-spacing:2px;
+
+text-shadow:
+
+0 0 20px rgba(255,255,255,.15);
+
+}
+
+.subtitle{
+
+margin-top:15px;
+
+font-size:1.1rem;
+
+color:var(--muted);
+
+letter-spacing:3px;
+
+}
+
+#begin{
+
+margin-top:50px;
+
+padding:14px 38px;
+
+background:rgba(255,255,255,.08);
+
+border:1px solid rgba(255,255,255,.2);
+
+border-radius:40px;
+
+color:white;
+
+font-size:15px;
+
+backdrop-filter:blur(12px);
+
+cursor:pointer;
+
+pointer-events:auto;
+
+transition:.35s;
+
+}
+
+#begin:hover{
+
+transform:translateY(-3px);
+
+background:rgba(255,255,255,.14);
+
+}
+
+
+
+/* ============================================
+   ANIMATIONS
+============================================ */
+
+@keyframes moonFloat{
+
+0%{
+
+transform:
+translateX(-50%)
+translateY(0);
+
+}
+
+50%{
+
+transform:
+translateX(-50%)
+translateY(10px);
+
+}
+
+100%{
+
+transform:
+translateX(-50%)
+translateY(0);
+
+}
+
+}
+
+
+
+@keyframes mistMove{
+
+0%{
+
+transform:translateX(-20%);
+
+}
+
+100%{
+
+transform:translateX(0%);
+
+}
+
+}
