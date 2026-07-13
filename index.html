@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Happy Birthday ❤️</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <!-- Entire World -->
+    <main id="world">
+
+        <!-- Sky -->
+        <section id="sky">
+
+            <!-- Animated Stars -->
+            <canvas id="stars"></canvas>
+
+            <!-- Constellations -->
+            <svg id="constellations"></svg>
+
+            <!-- Moon -->
+            <div id="moon"></div>
+
+            <!-- Clouds -->
+            <div id="cloud-layer"></div>
+
+        </section>
+
+
+
+        <!-- Mountains -->
+        <section id="mountains"></section>
+
+
+
+        <!-- Lake -->
+        <section id="lake">
+
+            <canvas id="water"></canvas>
+
+            <div id="reflection"></div>
+
+        </section>
+
+
+
+        <!-- Trees -->
+        <section id="foreground">
+
+            <div id="left-tree"></div>
+
+            <div id="right-tree"></div>
+
+        </section>
+
+
+
+        <!-- Mist -->
+        <div id="mist"></div>
+
+        <!-- Fireflies -->
+        <div id="fireflies"></div>
+
+        <!-- Shooting Stars -->
+        <div id="shooting-stars"></div>
+
+
+
+
+
+        <!-- Intro Overlay -->
+
+        <section id="intro">
+
+            <h1 class="title">
+
+                It's raining somewhere...
+
+            </h1>
+
+            <p class="subtitle">
+
+                ...but tonight, the moon is ours.
+
+            </p>
+
+            <button id="begin">
+
+                Begin
+
+            </button>
+
+        </section>
+
+
+
+
+
+        <!-- Music -->
+
+        <audio
+            id="bgMusic"
+            loop>
+
+            <source
+                src="assets/audio/ambience.mp3"
+                type="audio/mpeg">
+
+        </audio>
+
+    </main>
+
+
+
+    <!-- GSAP -->
+
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js">
+    </script>
+
+
+
+    <!-- JavaScript -->
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
