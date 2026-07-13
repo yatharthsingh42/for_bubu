@@ -146,34 +146,27 @@ body{
 
     position:absolute;
 
-    width:620px;
-    height:620px;
+    width:340px;
+    height:340px;
 
-    top:-170px;
-    right:-140px;
+    top:5%;
+    right:8%;
 
     border-radius:50%;
 
     background:
     radial-gradient(circle at 35% 35%,
-
         #FFFFFF 0%,
-        #F5F8FF 35%,
-        #DCEBFF 72%,
+        #F5F8FF 40%,
+        #DCEBFF 75%,
         #BDD8FF 100%);
 
     box-shadow:
+        0 0 40px rgba(180,220,255,.65),
+        0 0 100px rgba(150,200,255,.30),
+        0 0 220px rgba(120,170,255,.12);
 
-        0 0 80px rgba(170,220,255,.65),
-
-        0 0 180px rgba(150,200,255,.30),
-
-        0 0 350px rgba(120,170,255,.12);
-
-    animation:
-
-        moonFloat 9s ease-in-out infinite;
-
+    animation: moonFloat 8s ease-in-out infinite;
 }
 
 
