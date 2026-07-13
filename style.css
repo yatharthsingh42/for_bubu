@@ -121,18 +121,15 @@ body{
 
     border-radius:50%;
 
-    background:
+    background: radial-gradient(
+    circle at 30% 30%,
 
-    radial-gradient(
-        circle at 30% 28%,
-
-        #FFFDF6 0%,
-        #FFF4D8 18%,
-        #FFE7B8 45%,
-        #F7D79D 72%,
-        #E8C98A 100%
-    );
-
+    #FFFDF8 0%,
+    #FFF8EB 22%,
+    #FBEFD6 50%,
+    #F2DFC0 78%,
+    #E6D2AE 100%
+);
     box-shadow:
 
         0 0 35px rgba(255,230,170,.28),
