@@ -63,10 +63,22 @@
       { src: "assets/photos/4.jpg", caption: "Add a caption for this memory." },
       { src: "assets/photos/5.jpg", caption: "Add a caption for this memory." },
       { src: "assets/photos/6.jpg", caption: "Add a caption for this memory." },
-      { src: "assets/photos/7.jpg", caption: "Add a caption for this memory." },
-      { src: "assets/photos/8.jpg", caption: "Add a caption for this memory." },
     ],
     lanternRiseDurationMs: 7000, // how long each lantern takes to float to its resting spot
+
+    // Act two — scroll further and the scene settles onto a dock by
+    // the water, with a few more photos hanging like fairy lights.
+    // Same idea as the sky lanterns: swap in your own images/captions,
+    // add or remove entries freely, and rewrite the title/subtitle.
+    dockPhotos: [
+      { src: "assets/photos/dock1.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/dock2.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/dock3.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/dock4.jpg", caption: "Add a caption for this memory." },
+    ],
+    act2Title: "and here's to everything still ahead",
+    act2Subtitle: "— edit this line to say whatever you want her to read here.",
+    scrollSensitivity: 0.0009, // how far one wheel/swipe tick moves the journey along
 
     entranceDurationMs: 5200, // how long the "sky waking up" takes
     zoomPeriodMs: 30000, // whole-scene breathing zoom, one cycle
@@ -247,6 +259,133 @@
         transition: opacity 2s ease, transform 2s ease;
       }
       #intro.revealed { opacity: 1; transform: translateY(0); }
+
+      /* -- scroll hint -- */
+      #scroll-hint {
+        position: absolute;
+        left: 50%;
+        bottom: 34px;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted, #CFC6B7);
+        font-family: "Inter", sans-serif;
+        font-size: .68rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        opacity: 0;
+        transition: opacity 1s ease;
+        z-index: 20;
+        pointer-events: none;
+      }
+      #scroll-hint .chevron {
+        width: 9px; height: 9px;
+        border-right: 1px solid var(--muted, #CFC6B7);
+        border-bottom: 1px solid var(--muted, #CFC6B7);
+        transform: rotate(45deg);
+        animation: hintBounce 2.2s ease-in-out infinite;
+      }
+      @keyframes hintBounce {
+        0%, 100% { transform: rotate(45deg) translate(0,0); opacity: .5; }
+        50% { transform: rotate(45deg) translate(4px,4px); opacity: 1; }
+      }
+
+      /* -- act two: the dock -- */
+      #act-two {
+        position: fixed;
+        inset: 0;
+        z-index: 25;
+        overflow: hidden;
+        opacity: 0;
+        will-change: transform, opacity;
+        background:
+          radial-gradient(ellipse at 50% 0%, rgba(120,90,160,.15), transparent 60%),
+          linear-gradient(to bottom, #050810 0%, #0B1524 45%, #142943 100%);
+      }
+      #act-two-sky {
+        position: absolute; inset: 0;
+        opacity: .8;
+        background-image:
+          radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.7), transparent),
+          radial-gradient(1px 1px at 60% 15%, rgba(255,255,255,.5), transparent),
+          radial-gradient(1.5px 1.5px at 80% 40%, rgba(255,255,255,.6), transparent),
+          radial-gradient(1px 1px at 35% 55%, rgba(255,255,255,.4), transparent),
+          radial-gradient(1px 1px at 90% 20%, rgba(255,255,255,.55), transparent),
+          radial-gradient(1px 1px at 10% 65%, rgba(255,255,255,.45), transparent);
+      }
+      #dock {
+        position: absolute;
+        bottom: 0; left: 50%;
+        transform: translateX(-50%);
+        width: 520px; max-width: 90vw; height: 38%;
+        background: linear-gradient(to top, #05070C, #101A26);
+        clip-path: polygon(30% 100%, 38% 20%, 62% 20%, 70% 100%);
+        opacity: .9;
+      }
+      #boat {
+        position: absolute;
+        bottom: 9%; left: 26%;
+        width: 130px; height: 42px;
+        background: linear-gradient(to top, #04060A, #0D1720);
+        border-radius: 0 0 60px 60px / 0 0 26px 26px;
+        opacity: .85;
+        animation: boatBob 5s ease-in-out infinite;
+      }
+      @keyframes boatBob {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-4px) rotate(-1.2deg); }
+      }
+      #lantern-string {
+        position: absolute;
+        top: 10%; left: 10%;
+        width: 80%; height: 20%;
+        overflow: visible;
+      }
+      .dock-lantern {
+        position: absolute;
+        width: 52px; height: 52px;
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+      }
+      .dock-lantern .lantern-glow {
+        position: absolute; inset: -10px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,216,156,.5), transparent 70%);
+        filter: blur(5px);
+        animation: lanternPulse 3.2s ease-in-out infinite;
+      }
+      .dock-lantern .lantern-photo {
+        position: absolute; inset: 0;
+        border-radius: 50%;
+        background-size: cover;
+        background-position: center;
+        background-color: rgba(255,230,190,.12);
+        border: 2px solid rgba(255,230,190,.85);
+        box-shadow: 0 0 18px rgba(255,200,140,.4), inset 0 0 10px rgba(0,0,0,.25);
+      }
+      #act-two-text {
+        position: absolute;
+        left: 50%; bottom: 15%;
+        transform: translateX(-50%);
+        text-align: center;
+        color: var(--text, #F8F3EA);
+        max-width: 520px;
+        padding: 0 20px;
+      }
+      #act-two-text h2 {
+        font-family: "Cormorant Garamond", serif;
+        font-weight: 500;
+        font-size: clamp(1.6rem, 4vw, 2.6rem);
+        margin-bottom: 14px;
+      }
+      #act-two-text p {
+        font-family: "Inter", sans-serif;
+        color: var(--muted, #CFC6B7);
+        font-size: .95rem;
+        line-height: 1.7;
+      }
     `;
     const style = document.createElement("style");
     style.textContent = css;
@@ -1481,6 +1620,131 @@
   })();
 
   /*================================================================
+    7b. JOURNEY ENGINE — scroll further into the night (act two)
+  ================================================================*/
+  const JourneyEngine = (() => {
+    let world, scene, hint, panel;
+    let progress = 0; // smoothed 0..1, how far into act two we are
+    let targetProgress = 0;
+    let touchStartY = null;
+
+    function buildHint() {
+      hint = document.createElement("div");
+      hint.id = "scroll-hint";
+      hint.innerHTML = `<span>scroll to keep going</span><div class="chevron"></div>`;
+      document.getElementById("world").appendChild(hint);
+    }
+
+    // A point along the same quadratic curve drawn in #lantern-string,
+    // so each hanging photo sits exactly on the line.
+    function curveY(t, p0, p1, p2) {
+      return (1 - t) * (1 - t) * p0 + 2 * (1 - t) * t * p1 + t * t * p2;
+    }
+
+    function buildScene() {
+      scene = document.createElement("section");
+      scene.id = "act-two";
+      scene.innerHTML = `
+        <div id="act-two-sky"></div>
+        <div id="dock"></div>
+        <div id="boat"></div>
+        <svg id="lantern-string" viewBox="0 0 1000 200" preserveAspectRatio="none">
+          <path d="M0,40 Q500,160 1000,40" stroke="rgba(255,216,156,.35)" stroke-width="2" fill="none"/>
+        </svg>
+        <div id="act-two-text">
+          <h2></h2>
+          <p></p>
+        </div>
+      `;
+      scene.querySelector("h2").textContent = CONFIG.act2Title;
+      scene.querySelector("p").textContent = CONFIG.act2Subtitle;
+      document.body.appendChild(scene);
+
+      const stringEl = scene.querySelector("#lantern-string");
+      const n = CONFIG.dockPhotos.length;
+      CONFIG.dockPhotos.forEach((p, i) => {
+        const t = (i + 1) / (n + 1);
+        const x = t * 1000;
+        const y = curveY(t, 40, 160, 40);
+        const lantern = document.createElement("div");
+        lantern.className = "dock-lantern";
+        lantern.style.left = `${(x / 1000) * 100}%`;
+        lantern.style.top = `${(y / 200) * 100}%`;
+        lantern.innerHTML = `<div class="lantern-glow"></div><div class="lantern-photo" style="background-image:url('${p.src}')"></div>`;
+        lantern.addEventListener("click", (e) => {
+          e.stopPropagation();
+          showPhoto(p);
+        });
+        stringEl.after(lantern);
+      });
+
+      panel = document.createElement("div");
+      panel.className = "memory-panel";
+      scene.appendChild(panel);
+      scene.addEventListener("click", () => {
+        if (panel.classList.contains("visible")) panel.classList.remove("visible");
+      });
+    }
+
+    function showPhoto(p) {
+      panel.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = p.src;
+      img.alt = "";
+      const cap = document.createElement("p");
+      cap.textContent = p.caption;
+      const closeHint = document.createElement("span");
+      closeHint.className = "close-hint";
+      closeHint.textContent = "click anywhere to close";
+      panel.append(img, cap, closeHint);
+      panel.classList.add("visible");
+    }
+
+    function onWheel(e) {
+      if (!State.began) return;
+      targetProgress = clamp(targetProgress + e.deltaY * CONFIG.scrollSensitivity, 0, 1);
+      e.preventDefault();
+    }
+
+    function onTouchStart(e) {
+      touchStartY = e.touches[0].clientY;
+    }
+
+    function onTouchMove(e) {
+      if (!State.began || touchStartY === null) return;
+      const dy = touchStartY - e.touches[0].clientY;
+      targetProgress = clamp(targetProgress + dy * CONFIG.scrollSensitivity * 2.2, 0, 1);
+      touchStartY = e.touches[0].clientY;
+      e.preventDefault();
+    }
+
+    function tick() {
+      progress = lerp(progress, targetProgress, 0.07);
+
+      world.style.transform = `translateY(${-progress * 12}%) scale(${1 - progress * 0.05})`;
+      world.style.filter = `blur(${progress * 5}px) brightness(${1 - progress * 0.25})`;
+      world.style.pointerEvents = progress < 0.4 ? "auto" : "none";
+
+      scene.style.transform = `translateY(${(1 - progress) * 60}px)`;
+      scene.style.opacity = clamp((progress - 0.1) / 0.7, 0, 1);
+      scene.style.pointerEvents = progress > 0.55 ? "auto" : "none";
+
+      hint.style.opacity = State.began ? clamp(1 - progress * 6, 0, 1) * 0.75 : 0;
+    }
+
+    function init() {
+      world = document.getElementById("world");
+      buildHint();
+      buildScene();
+      window.addEventListener("wheel", onWheel, { passive: false });
+      window.addEventListener("touchstart", onTouchStart, { passive: true });
+      window.addEventListener("touchmove", onTouchMove, { passive: false });
+    }
+
+    return { init, tick };
+  })();
+
+  /*================================================================
     8. MAIN LOOP
   ================================================================*/
   function ensureOverlays() {
@@ -1550,6 +1814,7 @@
     PetalEngine.draw();
     StardustEngine.draw();
     WorldEngine.tick();
+    JourneyEngine.tick();
     applyBreathingZoom();
     applyCandleFlicker();
     requestAnimationFrame(frame);
@@ -1566,6 +1831,7 @@
     PetalEngine.init();
     StardustEngine.init();
     WorldEngine.init();
+    JourneyEngine.init();
     runEntranceSequence();
     requestAnimationFrame(frame);
   }
