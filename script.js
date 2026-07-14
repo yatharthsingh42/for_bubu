@@ -94,7 +94,7 @@
       shapeSize: 0.34, // heart width as a fraction of the smaller viewport dimension
       shapeCenter: { x: 0.5, y: 0.47 }, // normalized position of the heart's center
     },
-    scrollSensitivity: 0.0009, // how far one wheel/swipe tick moves the journey along
+    scrollSensitivity: 0.005, // how far one wheel/swipe tick moves the journey along
 
     entranceDurationMs: 5200, // how long the "sky waking up" takes
     zoomPeriodMs: 30000, // whole-scene breathing zoom, one cycle
@@ -1894,10 +1894,21 @@
     }
 
     function onWheel(e) {
-      if (!State.began) return;
-      targetProgress = clamp(targetProgress + e.deltaY * CONFIG.scrollSensitivity, 0, 1);
-      e.preventDefault();
-    }
+  if (!State.began) return;
+
+  const delta =
+    e.deltaMode === 1   // line scrolling (many laptops)
+      ? e.deltaY * 18
+      : e.deltaY;
+
+  targetProgress = clamp(
+    targetProgress + delta * CONFIG.scrollSensitivity,
+    0,
+    1
+  );
+
+  e.preventDefault();
+}
 
     function onTouchStart(e) {
       touchStartY = e.touches[0].clientY;
