@@ -91,7 +91,7 @@
       fieldStarCount: 520, // dense background starfield inside the portal
       shapePointCount: 150, // stars that travel to form the heart outline
       fillerStarCount: 90, // soft cluster of stars scattered inside the heart
-      shapeSize: 0.34, // heart width as a fraction of the smaller viewport dimension
+      shapeSize: 0.46, // heart width as a fraction of the smaller viewport dimension
       shapeCenter: { x: 0.5, y: 0.47 }, // normalized position of the heart's center
     },
     scrollSensitivity: 0.005, // how far one wheel/swipe tick moves the journey along
@@ -206,7 +206,7 @@
       }
       .lantern {
         position: absolute;
-        width: 74px; height: 74px;
+        width: 95px; height: 95px;
         left: 0; top: 0;
         z-index: 17;
         cursor: pointer;
@@ -1502,7 +1502,7 @@
         const eased = 1 - Math.pow(1 - t, 3); // ease-out
         l.x = lerp(l.startX, l.targetX, eased);
         l.y = lerp(l.startY, l.targetY, eased);
-        const bob = t >= 1 ? Math.sin(State.elapsed / 1000 * 0.6 + l.phase) * 5 : 0;
+        const bob = t >= 1 ? Math.sin(State.elapsed / 1000 * 0.20 + l.phase) * 8 : 0;
         l.el.style.transform = `translate(${l.x - 37}px, ${l.y - 37 + bob}px)`;
       }
     }
@@ -1986,7 +1986,7 @@
     const T_BURST_END = 1500;
     const T_CONVERGE_START = 2600;
     const T_CONVERGE_END = 7600;
-    const T_ORBIT_SPAWN = T_CONVERGE_END + 900; // photos rise shortly after the heart settles
+    const T_ORBIT_SPAWN = T_CONVERGE_END + 1500; // photos rise shortly after the heart settles
     const FINALE_SPLIT_MS = 2200;  // how long the two halves take to pull apart
     const FINALE_CONFETTI_MS = 4800; // how long confetti keeps falling
 
