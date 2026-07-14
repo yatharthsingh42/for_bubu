@@ -46,7 +46,7 @@
     meteorMinGapMs: 18000,
     meteorMaxGapMs: 55000,
 
-    fireflyCount: 22,
+    fireflyCount: 60,
     fireflyHeartCycleMs: 26000, // fireflies gather into a heart roughly this often
 
     petalCount: 100,
@@ -1325,7 +1325,7 @@
       }
       const heartCx = w * 0.5;
       const heartCy = h * 0.46;
-      const heartScale = Math.min(w, h) * 0.011;
+      const heartScale = Math.min(w, h) * 0.018;
 
       if (heartT > 0.92 && !lanternsTriggered) {
         lanternsTriggered = true;
@@ -1357,9 +1357,9 @@
         ctx.globalAlpha = clamp(glow, 0, 1);
         ctx.fillStyle = heartT > 0.3 ? "#FFC7D6" : "#FFD89C";
         ctx.shadowColor = heartT > 0.3 ? "#FFC7D6" : "#FFD89C";
-        ctx.shadowBlur = 8 + heartT * 8;
+        ctx.shadowBlur = 18 + heartT * 22;
         ctx.beginPath();
-        ctx.arc(f.x, f.y, 1.6 + heartT * 0.6, 0, TAU);
+        ctx.arc(f.x, f.y, 2.8 + heartT * 1.4, 0, TAU);
         ctx.fill();
       }
       ctx.shadowBlur = 0;
