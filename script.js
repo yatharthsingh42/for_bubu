@@ -36,7 +36,7 @@
     0. CONFIG
   ================================================================*/
   const CONFIG = {
-    musicSrc: "", // e.g. "song.mp3" — leave "" to skip audio sync
+    musicSrc: "assets/audio/ambience.mp3", // e.g. "song.mp3" — leave "" to skip audio sync
 
     starCounts: { tiny: 1300, medium: 250, bright: 40, hero: 8 },
     milkyWayStars: 900,
@@ -78,6 +78,15 @@
     ],
     act2Title: "and here's to everything still ahead",
     act2Subtitle: "— edit this line to say whatever you want her to read here.",
+
+    // The moon is clickable. Clicking it cracks the sky open into a
+    // starlit portal and types out this letter, word by word. This is
+    // the "click something and be wowed" moment — write it for real.
+    moonLetter: {
+      title: "if you're reading this,",
+      body:
+        "you found it. \n\nWrite the real letter here — replace this placeholder with something only she would recognize: an inside joke, the story of how you met, or just the truest thing you know about how you feel about her. \n\nKeep it in her voice, not a stranger's. That's what will actually wow her.",
+    },
     scrollSensitivity: 0.0009, // how far one wheel/swipe tick moves the journey along
 
     entranceDurationMs: 5200, // how long the "sky waking up" takes
@@ -385,6 +394,98 @@
         color: var(--muted, #CFC6B7);
         font-size: .95rem;
         line-height: 1.7;
+      }
+      #moon.portal-ready {
+        cursor: pointer;
+      }
+      .moon-portal {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(circle at var(--portal-x,50%) var(--portal-y,50%), rgba(15,22,36,.98) 0%, rgba(2,5,11,.99) 68%);
+        clip-path: circle(0% at var(--portal-x,50%) var(--portal-y,50%));
+        transition: clip-path 1.5s cubic-bezier(.65,0,.35,1);
+        opacity: 0;
+        pointer-events: none;
+        cursor: pointer;
+      }
+      .moon-portal.open {
+        opacity: 1;
+        pointer-events: auto;
+        clip-path: circle(150% at var(--portal-x,50%) var(--portal-y,50%));
+      }
+      .moon-portal-stars {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+      .moon-portal-streak {
+        position: absolute;
+        top: -20%;
+        width: 2px;
+        background: linear-gradient(to bottom, transparent, #FFD89C, transparent);
+        opacity: 0;
+        animation: portalStreak linear infinite;
+      }
+      @keyframes portalStreak {
+        0% { transform: translateY(-40%) scaleY(.4); opacity: 0; }
+        12% { opacity: .75; }
+        100% { transform: translateY(340%) scaleY(1.6); opacity: 0; }
+      }
+      .moon-portal-content {
+        position: relative;
+        z-index: 2;
+        max-width: 560px;
+        padding: 0 34px;
+        text-align: center;
+        color: var(--text, #F8F3EA);
+        cursor: default;
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity 1.1s ease .5s, transform 1.1s ease .5s;
+      }
+      .moon-portal.open .moon-portal-content {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .moon-portal-title {
+        font-family: "Cormorant Garamond", serif;
+        font-size: clamp(1.5rem, 4vw, 2.2rem);
+        letter-spacing: 1px;
+        margin-bottom: 22px;
+        color: var(--gold, #FFD89C);
+      }
+      .moon-portal-text {
+        font-family: "Cormorant Garamond", serif;
+        font-size: clamp(1.05rem, 2.3vw, 1.35rem);
+        line-height: 1.9;
+        letter-spacing: .3px;
+        white-space: pre-wrap;
+        min-height: 2em;
+      }
+      .moon-portal-caret {
+        display: inline-block;
+        width: 1px;
+        height: 1em;
+        background: var(--gold, #FFD89C);
+        margin-left: 2px;
+        vertical-align: -.15em;
+        animation: caretBlink 1s step-end infinite;
+      }
+      @keyframes caretBlink { 50% { opacity: 0; } }
+      .moon-portal-hint {
+        margin-top: 32px;
+        font-family: "Inter", sans-serif;
+        font-size: .68rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted, #CFC6B7);
+        opacity: 0;
+        transition: opacity .8s ease;
       }
     `;
     const style = document.createElement("style");
@@ -1550,7 +1651,7 @@
 
     function setupAudio() {
       if (!CONFIG.musicSrc) return;
-      audioEl = document.getElementById("bg-music");
+      audioEl = document.getElementById("bgMusic");
       if (!audioEl) return;
       audioEl.src = CONFIG.musicSrc;
     }
@@ -1600,6 +1701,7 @@
           }, 1600);
         }
         startAudio();
+        MoonPortalEngine.ready();
       });
     }
 
@@ -1745,6 +1847,115 @@
   })();
 
   /*================================================================
+    7c. MOON PORTAL ENGINE — click the moon, crack the sky open
+  ================================================================*/
+  const MoonPortalEngine = (() => {
+    let overlay, starsEl, titleEl, textEl, hintEl;
+    let opened = false;
+
+    function buildStreaks(n = 46) {
+      starsEl.innerHTML = "";
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < n; i++) {
+        const s = document.createElement("div");
+        s.className = "moon-portal-streak";
+        s.style.left = rand(0, 100) + "%";
+        s.style.height = rand(70, 190) + "px";
+        s.style.animationDuration = rand(1.3, 3.1) + "s";
+        s.style.animationDelay = rand(0, 2.6) + "s";
+        frag.appendChild(s);
+      }
+      starsEl.appendChild(frag);
+    }
+
+    function typeText(text, el, speed = 24) {
+      return new Promise((resolve) => {
+        el.textContent = "";
+        const caret = document.createElement("span");
+        caret.className = "moon-portal-caret";
+        let i = 0;
+        function step() {
+          if (!opened) return resolve(); // closed early, stop typing
+          if (i <= text.length) {
+            el.textContent = text.slice(0, i);
+            el.appendChild(caret);
+            i++;
+            setTimeout(step, text[i - 1] === "\n" ? speed * 6 : speed);
+          } else {
+            resolve();
+          }
+        }
+        step();
+      });
+    }
+
+    async function open(originX, originY) {
+      if (opened) return;
+      opened = true;
+      overlay.style.setProperty("--portal-x", `${originX}px`);
+      overlay.style.setProperty("--portal-y", `${originY}px`);
+      buildStreaks();
+      titleEl.textContent = "";
+      textEl.textContent = "";
+      hintEl.style.opacity = "0";
+      overlay.classList.add("open");
+      await new Promise((r) => setTimeout(r, 950));
+      if (!opened) return;
+      titleEl.textContent = CONFIG.moonLetter.title;
+      await typeText(CONFIG.moonLetter.body, textEl, 24);
+      if (opened) hintEl.style.opacity = ".55";
+    }
+
+    function close() {
+      if (!opened) return;
+      opened = false;
+      overlay.classList.remove("open");
+    }
+
+    function build() {
+      overlay = document.createElement("div");
+      overlay.className = "moon-portal";
+      overlay.innerHTML = `
+        <div class="moon-portal-stars"></div>
+        <div class="moon-portal-content">
+          <div class="moon-portal-title"></div>
+          <div class="moon-portal-text"></div>
+          <div class="moon-portal-hint">tap anywhere to return to the sky</div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      starsEl = overlay.querySelector(".moon-portal-stars");
+      titleEl = overlay.querySelector(".moon-portal-title");
+      textEl = overlay.querySelector(".moon-portal-text");
+      hintEl = overlay.querySelector(".moon-portal-hint");
+      overlay.addEventListener("click", close);
+    }
+
+    function init() {
+      build();
+      const moon = document.getElementById("moon");
+      if (!moon) return;
+      moon.addEventListener("click", (e) => {
+        if (!State.began) return;
+        e.stopPropagation();
+        const rect = moon.getBoundingClientRect();
+        open(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      });
+    }
+
+    // Called once the visitor has clicked "Begin" — this is the only
+    // signal that tells her the moon is interactive at all, which is
+    // exactly why it feels like a secret she found rather than a
+    // button she was told about.
+    function ready() {
+      const moon = document.getElementById("moon");
+      if (moon) moon.classList.add("portal-ready");
+    }
+
+    return { init, ready };
+  })();
+
+  /*================================================================
     8. MAIN LOOP
   ================================================================*/
   function ensureOverlays() {
@@ -1832,6 +2043,7 @@
     StardustEngine.init();
     WorldEngine.init();
     JourneyEngine.init();
+    MoonPortalEngine.init();
     runEntranceSequence();
     requestAnimationFrame(frame);
   }
