@@ -519,6 +519,65 @@
         background: radial-gradient(ellipse at var(--portal-x,50%) var(--portal-y,50%),
           transparent 30%, rgba(0,1,4,.28) 70%, rgba(0,1,4,.6) 100%);
       }
+
+      /* -- orbit photos: once the heart locks, your photos rise up
+         and take slow elliptical orbits around it, like little moons -- */
+      .orbit-photo {
+        position: absolute;
+        width: 64px; height: 64px;
+        left: 0; top: 0;
+        z-index: 5;
+        cursor: pointer;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.4);
+        transition: opacity 1.6s ease, transform 1.6s cubic-bezier(.34,1.56,.64,1);
+        pointer-events: none;
+      }
+      .orbit-photo.visible {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+        pointer-events: auto;
+      }
+      .orbit-photo.hidden-finale { opacity: 0 !important; pointer-events: none; }
+      .orbit-photo-glow {
+        position: absolute; inset: -12px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,193,217,.55), rgba(255,190,140,.15) 55%, transparent 75%);
+        filter: blur(5px);
+        animation: lanternPulse 3.2s ease-in-out infinite;
+      }
+      .orbit-photo-img {
+        position: absolute; inset: 0;
+        border-radius: 50%;
+        background-size: cover;
+        background-position: center;
+        background-color: rgba(255,230,190,.12);
+        border: 2px solid rgba(255, 216, 226, .9);
+        box-shadow: 0 0 18px rgba(255, 180, 200, .5), inset 0 0 12px rgba(0,0,0,.25);
+      }
+
+      /* -- the tiny hint that tells her the heart can be touched -- */
+      .portal-hint {
+        position: absolute;
+        left: 50%;
+        bottom: 8%;
+        transform: translateX(-50%);
+        z-index: 5;
+        color: var(--text, #F8F3EA);
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+        font-size: 1.05rem;
+        letter-spacing: 1px;
+        opacity: 0;
+        transition: opacity 1.6s ease;
+        pointer-events: none;
+        text-shadow: 0 0 20px rgba(255,216,200,.5);
+      }
+      .portal-hint.visible { opacity: .85; animation: hintFloat 3.5s ease-in-out infinite; }
+      @keyframes hintFloat {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(-6px); }
+      }
     `;
     const style = document.createElement("style");
     style.textContent = css;
@@ -1901,10 +1960,24 @@
     let flashLife = 0;
     let rings = [];
 
+    // -- the payoff: photos orbiting the settled heart, then (on
+    // click) the heart splitting open in a burst of tiny hearts
+    // and confetti -- 
+    let orbitEls = [];      // DOM elements, one per CONFIG.photos entry
+    let orbitSpawned = false;
+    let hintEl = null;
+    let finalePanel = null;
+    let finaleTriggered = false;
+    let finaleStart = 0;
+    let confetti = [];      // tiny hearts + ribbons from the split burst
+
     // -- timing (ms from bloomStart) --
     const T_BURST_END = 1500;
     const T_CONVERGE_START = 2600;
     const T_CONVERGE_END = 7600;
+    const T_ORBIT_SPAWN = T_CONVERGE_END + 900; // photos rise shortly after the heart settles
+    const FINALE_SPLIT_MS = 2200;  // how long the two halves take to pull apart
+    const FINALE_CONFETTI_MS = 4800; // how long confetti keeps falling
 
     const PALETTE_AMBIENT = ["#FFFFFF", "#DCE8FF", "#FFE9C7"];
     const PALETTE_WARM = ["#FFD89C", "#FFE9C7", "#FFC1D9", "#FFB3C6"];
@@ -2000,6 +2073,70 @@
       };
     }
 
+    // -- orbit photos: rise out of the settled heart and take up
+    // slow, staggered elliptical orbits around it, like tiny moons. --
+    function spawnOrbitPhotos() {
+      orbitSpawned = true;
+      const photos = CONFIG.photos.filter((p) => p && p.src);
+      orbitEls = photos.map((p, i) => {
+        const el = document.createElement("div");
+        el.className = "orbit-photo";
+        el.innerHTML = `<div class="orbit-photo-glow"></div><div class="orbit-photo-img" style="background-image:url('${p.src}')"></div>`;
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          showFinalePhoto(p);
+        });
+        overlay.appendChild(el);
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("visible")));
+        return {
+          el,
+          angle: (i / photos.length) * TAU + rand(-0.2, 0.2),
+          speed: rand(0.09, 0.14) * (i % 2 === 0 ? 1 : -1), // alternate direction, feels less mechanical
+          rxFactor: rand(1.55, 1.85),
+          ryFactor: rand(0.62, 0.8),
+          bob: rand(0, TAU),
+        };
+      });
+      if (hintEl) hintEl.classList.add("visible");
+    }
+
+    function tickOrbitPhotos(tsec) {
+      if (!orbitEls.length) return;
+      const cx = w * B.shapeCenter.x;
+      const cy = h * B.shapeCenter.y;
+      const scale = (B.shapeSize * Math.min(w, h)) / 32;
+      for (const o of orbitEls) {
+        const a = o.angle + tsec * o.speed;
+        const rx = scale * 16 * o.rxFactor;
+        const ry = scale * 13 * o.ryFactor;
+        const x = cx + Math.cos(a) * rx;
+        const y = cy + Math.sin(a) * ry + Math.sin(tsec * 0.6 + o.bob) * 6;
+        o.el.style.left = `${x}px`;
+        o.el.style.top = `${y}px`;
+      }
+    }
+
+    function buildFinalePanel() {
+      finalePanel = document.createElement("div");
+      finalePanel.className = "memory-panel";
+      overlay.appendChild(finalePanel);
+    }
+
+    function showFinalePhoto(p) {
+      if (!finalePanel) return;
+      finalePanel.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = p.src;
+      img.alt = "";
+      const cap = document.createElement("p");
+      cap.textContent = p.caption || "";
+      const closeHint = document.createElement("span");
+      closeHint.className = "close-hint";
+      closeHint.textContent = "click anywhere to close";
+      finalePanel.append(img, cap, closeHint);
+      finalePanel.classList.add("visible");
+    }
+
     function buildStreaks(n = 60) {
       streaksEl.innerHTML = "";
       const frag = document.createDocumentFragment();
@@ -2057,6 +2194,96 @@
         life: 1,
         color: palette[randInt(0, palette.length - 1)],
       });
+    }
+
+    // -- the finale: the heart splits down its seam and a burst of
+    // tiny hearts + confetti ribbons pour out of it -- 
+    function triggerFinale() {
+      if (finaleTriggered || !orbitSpawned) return;
+      finaleTriggered = true;
+      finaleStart = performance.now();
+
+      const cx = w * B.shapeCenter.x;
+      const cy = h * B.shapeCenter.y;
+      const confettiColors = ["#FFD89C", "#FFB3C6", "#FFC1D9", "#EEF4F9", "#C9AFFF", "#FFF6E6"];
+      confetti = [];
+      const n = 170;
+      for (let i = 0; i < n; i++) {
+        const angle = rand(0, TAU);
+        const speed = rand(2.5, 11);
+        const isHeart = Math.random() < 0.45;
+        confetti.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - rand(1, 4), // extra upward kick
+          size: isHeart ? rand(5, 11) : rand(4, 9),
+          shape: isHeart ? "heart" : Math.random() < 0.5 ? "rect" : "circle",
+          color: confettiColors[randInt(0, confettiColors.length - 1)],
+          rot: rand(0, TAU),
+          rotSpeed: rand(-0.12, 0.12),
+          life: 1,
+          drag: rand(0.975, 0.99),
+        });
+      }
+
+      // orbit photos scatter outward with the confetti rather than
+      // just vanishing — feels like part of the same burst
+      for (const o of orbitEls) o.el.classList.add("hidden-finale");
+      if (hintEl) hintEl.classList.remove("visible");
+    }
+
+    function drawTinyHeart(x, y, size, rot, color, alpha) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.globalAlpha = clamp(alpha, 0, 1);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      const s = size / 16;
+      for (let i = 0; i <= 24; i++) {
+        const t = (i / 24) * TAU;
+        const p = heartPoint(t, 0, 0, s);
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawConfettiPiece(c) {
+      ctx.globalAlpha = clamp(c.life, 0, 1);
+      if (c.shape === "heart") {
+        drawTinyHeart(c.x, c.y, c.size, c.rot, c.color, c.life);
+      } else if (c.shape === "rect") {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.rot);
+        ctx.fillStyle = c.color;
+        ctx.fillRect(-c.size / 2, -c.size / 4, c.size, c.size / 2);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = c.color;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.size / 2.4, 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function tickConfetti() {
+      const gravity = 0.11;
+      for (const c of confetti) {
+        c.vx *= c.drag;
+        c.vy = c.vy * c.drag + gravity;
+        c.x += c.vx;
+        c.y += c.vy;
+        c.rot += c.rotSpeed;
+        if (c.y > h * 0.7) c.life -= 0.012; // fade once it drifts low
+        drawConfettiPiece(c);
+      }
+      confetti = confetti.filter((c) => c.life > 0 && c.y < h + 40);
     }
 
     function step(now) {
@@ -2149,22 +2376,36 @@
         }
       }
 
-      // -- the heart's outline, drawn as it locks into place --
+      // -- the heart's outline, drawn as it locks into place. Once the
+      // finale starts, it stops closing the loop (so the two halves
+      // read as pulling apart, not a seam being stretched) and fades. --
       if (shapeIdx.length > 1 && elapsed >= T_CONVERGE_START) {
-        const glow = clamp(eased, 0, 1);
-        ctx.strokeStyle = `rgba(255, 216, 200, ${0.15 + glow * 0.55})`;
-        ctx.lineWidth = 1;
-        ctx.shadowColor = "rgba(255, 190, 210, .85)";
-        ctx.shadowBlur = 5 + glow * 7;
-        ctx.beginPath();
-        for (let i = 0; i < shapeIdx.length; i++) {
-          const p = particles[shapeIdx[i]];
-          if (i === 0) ctx.moveTo(p.x, p.y);
-          else ctx.lineTo(p.x, p.y);
+        const finaleFade = finaleTriggered
+          ? clamp(1 - (now - finaleStart) / (FINALE_SPLIT_MS * 0.9), 0, 1)
+          : 1;
+        const glow = clamp(eased, 0, 1) * finaleFade;
+        if (glow > 0.01) {
+          const cx = w * B.shapeCenter.x;
+          ctx.strokeStyle = `rgba(255, 216, 200, ${0.15 + glow * 0.55})`;
+          ctx.lineWidth = 1;
+          ctx.shadowColor = "rgba(255, 190, 210, .85)";
+          ctx.shadowBlur = 5 + glow * 7;
+          ctx.beginPath();
+          let penDown = false;
+          for (let i = 0; i <= shapeIdx.length; i++) {
+            const p = particles[shapeIdx[i % shapeIdx.length]];
+            const prev = particles[shapeIdx[(i - 1 + shapeIdx.length) % shapeIdx.length]];
+            // break the stroke wherever the outline would have to
+            // cross the split gap between the two halves
+            if (finaleTriggered && Math.sign(p.target.x - cx) !== Math.sign(prev.target.x - cx)) {
+              penDown = false;
+            }
+            if (!penDown) { ctx.moveTo(p.x, p.y); penDown = true; }
+            else ctx.lineTo(p.x, p.y);
+          }
+          ctx.stroke();
+          ctx.shadowBlur = 0;
         }
-        ctx.closePath();
-        ctx.stroke();
-        ctx.shadowBlur = 0;
       }
 
       // -- occasional meteors, denser during the storm, rare at rest --
@@ -2196,6 +2437,34 @@
         if (m.x > w + 60 || m.y > h + 60) m.life = 0;
       }
 
+      // -- the payoff: once the heart has held its shape for a beat,
+      // your photos rise up and settle into orbit around it -- 
+      if (!orbitSpawned && elapsed >= T_ORBIT_SPAWN) spawnOrbitPhotos();
+      if (orbitSpawned && !finaleTriggered) tickOrbitPhotos(tsec);
+
+      // -- the finale: the heart pulls apart at the seam and a burst
+      // of tiny hearts + confetti pours out of it -- 
+      if (finaleTriggered) {
+        const fElapsed = now - finaleStart;
+        const splitT = easeInOutCubic(clamp(fElapsed / FINALE_SPLIT_MS, 0, 1));
+        const cx = w * B.shapeCenter.x;
+        for (let i = 0; i < shapeIdx.length; i++) {
+          const p = particles[shapeIdx[i]];
+          const side = p.target.x < cx ? -1 : 1;
+          const drift = splitT * (0.5 + Math.abs(p.target.x - cx) / w) * Math.min(w, h) * 0.28;
+          p.x = p.target.x + side * drift;
+          p.y = p.target.y + splitT * Math.min(w, h) * 0.1;
+        }
+        for (const p of particles) {
+          if (!p.target || p.isShapePoint) continue;
+          const side = p.target.x < cx ? -1 : 1;
+          const drift = splitT * 0.5 * (0.4 + Math.abs(p.target.x - cx) / w) * Math.min(w, h) * 0.28;
+          p.x = p.target.x + side * drift;
+          p.y = p.target.y + splitT * Math.min(w, h) * 0.1;
+        }
+        tickConfetti();
+      }
+
       if (closing) {
         closing = false; // one more frame then the RAF stops naturally on transitionend timeout
       }
@@ -2223,6 +2492,16 @@
       flashLife = 1;
       bloomStart = performance.now();
       nextMeteorAt = bloomStart + 200;
+
+      // fresh start for the payoff sequence each time the portal opens
+      for (const o of orbitEls) o.el.remove();
+      orbitEls = [];
+      orbitSpawned = false;
+      finaleTriggered = false;
+      confetti = [];
+      if (hintEl) hintEl.classList.remove("visible");
+      if (finalePanel) finalePanel.classList.remove("visible");
+
       overlay.classList.add("open");
       if (!raf) raf = requestAnimationFrame(step);
     }
@@ -2232,12 +2511,33 @@
       opened = false;
       closing = true;
       overlay.classList.remove("open");
+      if (hintEl) hintEl.classList.remove("visible");
+      if (finalePanel) finalePanel.classList.remove("visible");
       setTimeout(() => {
         if (raf) cancelAnimationFrame(raf);
         raf = null;
         closing = false;
         if (ctx) ctx.clearRect(0, 0, w, h);
+        for (const o of orbitEls) o.el.remove();
+        orbitEls = [];
       }, 1700);
+    }
+
+    // The overlay's click behaves in three stages: while the heart is
+    // still forming, a click backs out early; once the photos are in
+    // orbit, the first click sets off the finale (split + confetti);
+    // and a click after that closes the portal.
+    function onOverlayClick() {
+      if (!opened) return;
+      if (finalePanel && finalePanel.classList.contains("visible")) {
+        finalePanel.classList.remove("visible");
+        return;
+      }
+      if (orbitSpawned && !finaleTriggered) {
+        triggerFinale();
+        return;
+      }
+      close();
     }
 
     function build() {
@@ -2253,12 +2553,15 @@
         <div class="moon-portal-stars"></div>
         <canvas class="moon-portal-canvas"></canvas>
         <div class="moon-portal-vignette"></div>
+        <div class="portal-hint">touch the heart</div>
       `;
       document.body.appendChild(overlay);
       streaksEl = overlay.querySelector(".moon-portal-stars");
       canvas = overlay.querySelector(".moon-portal-canvas");
+      hintEl = overlay.querySelector(".portal-hint");
       ctx = canvas.getContext("2d");
-      overlay.addEventListener("click", close);
+      buildFinalePanel();
+      overlay.addEventListener("click", onOverlayClick);
       window.addEventListener("resize", () => {
         if (opened) resize();
       });
