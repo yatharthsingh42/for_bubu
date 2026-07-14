@@ -79,13 +79,20 @@
     act2Title: "and here's to everything still ahead",
     act2Subtitle: "— edit this line to say whatever you want her to read here.",
 
-    // The moon is clickable. Clicking it cracks the sky open into a
-    // starlit portal and types out this letter, word by word. This is
-    // the "click something and be wowed" moment — write it for real.
-    moonLetter: {
-      title: "if you're reading this,",
-      body:
-        "you found it. \n\nWrite the real letter here — replace this placeholder with something only she would recognize: an inside joke, the story of how you met, or just the truest thing you know about how you feel about her. \n\nKeep it in her voice, not a stranger's. That's what will actually wow her.",
+    // The moon is clickable. Clicking it cracks the sky wide open into
+    // a second, deeper sky: a chaotic bloom of thousands of stars and
+    // color that explodes outward, storms across the screen, and then
+    // slowly, gravity-like, gathers itself into one enormous constellation
+    // — a heart built entirely out of starlight — and rests there,
+    // breathing, for as long as she wants to look at it. No words.
+    // This IS the message.
+    celestialBloom: {
+      burstCount: 340, // particles in the initial explosion
+      fieldStarCount: 520, // dense background starfield inside the portal
+      shapePointCount: 150, // stars that travel to form the heart outline
+      fillerStarCount: 90, // soft cluster of stars scattered inside the heart
+      shapeSize: 0.34, // heart width as a fraction of the smaller viewport dimension
+      shapeCenter: { x: 0.5, y: 0.47 }, // normalized position of the heart's center
     },
     scrollSensitivity: 0.0009, // how far one wheel/swipe tick moves the journey along
 
@@ -402,13 +409,11 @@
         position: fixed;
         inset: 0;
         z-index: 60;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        overflow: hidden;
         background:
-          radial-gradient(circle at var(--portal-x,50%) var(--portal-y,50%), rgba(15,22,36,.98) 0%, rgba(2,5,11,.99) 68%);
+          radial-gradient(circle at var(--portal-x,50%) var(--portal-y,50%), rgba(20,26,42,.98) 0%, rgba(2,5,11,.99) 68%);
         clip-path: circle(0% at var(--portal-x,50%) var(--portal-y,50%));
-        transition: clip-path 1.5s cubic-bezier(.65,0,.35,1);
+        transition: clip-path 1.6s cubic-bezier(.65,0,.35,1);
         opacity: 0;
         pointer-events: none;
         cursor: pointer;
@@ -418,74 +423,101 @@
         pointer-events: auto;
         clip-path: circle(150% at var(--portal-x,50%) var(--portal-y,50%));
       }
+
+      /* -- nebula: layered, slowly-drifting blurred color fields that
+         give the portal an "extremely pretty background" independent
+         of the particle canvas — cheap on the GPU since it's pure CSS. */
+      .moon-portal-nebula {
+        position: absolute;
+        inset: -10%;
+        z-index: 1;
+        opacity: 0;
+        transition: opacity 3s ease .3s;
+        mix-blend-mode: screen;
+      }
+      .moon-portal.open .moon-portal-nebula { opacity: 1; }
+      .nebula-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(70px);
+        opacity: .55;
+        will-change: transform;
+      }
+      .nebula-blob:nth-child(1) {
+        width: 60vw; height: 60vw;
+        top: -8%; left: -12%;
+        background: radial-gradient(circle, rgba(200,140,255,.55), transparent 70%);
+        animation: nebulaDrift1 46s ease-in-out infinite;
+      }
+      .nebula-blob:nth-child(2) {
+        width: 55vw; height: 55vw;
+        bottom: -14%; right: -10%;
+        background: radial-gradient(circle, rgba(255,150,190,.5), transparent 70%);
+        animation: nebulaDrift2 55s ease-in-out infinite;
+      }
+      .nebula-blob:nth-child(3) {
+        width: 46vw; height: 46vw;
+        top: 30%; right: 8%;
+        background: radial-gradient(circle, rgba(120,180,255,.4), transparent 72%);
+        animation: nebulaDrift3 38s ease-in-out infinite;
+      }
+      .nebula-blob:nth-child(4) {
+        width: 40vw; height: 40vw;
+        bottom: 10%; left: 6%;
+        background: radial-gradient(circle, rgba(255,216,156,.4), transparent 72%);
+        animation: nebulaDrift1 62s ease-in-out infinite reverse;
+      }
+      @keyframes nebulaDrift1 {
+        0%, 100% { transform: translate(0,0) scale(1); }
+        50% { transform: translate(4%, 6%) scale(1.12); }
+      }
+      @keyframes nebulaDrift2 {
+        0%, 100% { transform: translate(0,0) scale(1); }
+        50% { transform: translate(-5%, -4%) scale(1.08); }
+      }
+      @keyframes nebulaDrift3 {
+        0%, 100% { transform: translate(0,0) scale(1); }
+        50% { transform: translate(-6%, 5%) scale(1.15); }
+      }
+
       .moon-portal-stars {
         position: absolute;
         inset: 0;
         overflow: hidden;
+        z-index: 2;
       }
       .moon-portal-streak {
         position: absolute;
         top: -20%;
         width: 2px;
-        background: linear-gradient(to bottom, transparent, #FFD89C, transparent);
         opacity: 0;
         animation: portalStreak linear infinite;
       }
       @keyframes portalStreak {
         0% { transform: translateY(-40%) scaleY(.4); opacity: 0; }
-        12% { opacity: .75; }
+        12% { opacity: .8; }
         100% { transform: translateY(340%) scaleY(1.6); opacity: 0; }
       }
-      .moon-portal-content {
-        position: relative;
-        z-index: 2;
-        max-width: 560px;
-        padding: 0 34px;
-        text-align: center;
-        color: var(--text, #F8F3EA);
-        cursor: default;
-        opacity: 0;
-        transform: translateY(16px);
-        transition: opacity 1.1s ease .5s, transform 1.1s ease .5s;
+
+      /* -- the bloom canvas: everything alive (burst, storm, the
+         heart made of stars) is drawn here -- */
+      .moon-portal-canvas {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        width: 100%;
+        height: 100%;
+        display: block;
       }
-      .moon-portal.open .moon-portal-content {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      .moon-portal-title {
-        font-family: "Cormorant Garamond", serif;
-        font-size: clamp(1.5rem, 4vw, 2.2rem);
-        letter-spacing: 1px;
-        margin-bottom: 22px;
-        color: var(--gold, #FFD89C);
-      }
-      .moon-portal-text {
-        font-family: "Cormorant Garamond", serif;
-        font-size: clamp(1.05rem, 2.3vw, 1.35rem);
-        line-height: 1.9;
-        letter-spacing: .3px;
-        white-space: pre-wrap;
-        min-height: 2em;
-      }
-      .moon-portal-caret {
-        display: inline-block;
-        width: 1px;
-        height: 1em;
-        background: var(--gold, #FFD89C);
-        margin-left: 2px;
-        vertical-align: -.15em;
-        animation: caretBlink 1s step-end infinite;
-      }
-      @keyframes caretBlink { 50% { opacity: 0; } }
-      .moon-portal-hint {
-        margin-top: 32px;
-        font-family: "Inter", sans-serif;
-        font-size: .68rem;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        color: var(--muted, #CFC6B7);
-        opacity: 0;
-        transition: opacity .8s ease;
+
+      /* soft dark vignette so the bloom reads as deep, not flat */
+      .moon-portal-vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        pointer-events: none;
+        background: radial-gradient(ellipse at var(--portal-x,50%) var(--portal-y,50%),
+          transparent 30%, rgba(0,1,4,.28) 70%, rgba(0,1,4,.6) 100%);
       }
     `;
     const style = document.createElement("style");
@@ -1847,88 +1879,389 @@
   })();
 
   /*================================================================
-    7c. MOON PORTAL ENGINE — click the moon, crack the sky open
+    7c. CELESTIAL BLOOM ENGINE — click the moon, crack the sky open
+    into a second sky: an explosion of stars, a storm of meteors,
+    then a slow gravity-like gathering into one giant constellation
+    shaped like a heart. Pure visual. No words.
   ================================================================*/
   const MoonPortalEngine = (() => {
-    let overlay, starsEl, titleEl, textEl, hintEl;
-    let opened = false;
+    const B = CONFIG.celestialBloom;
 
-    function buildStreaks(n = 46) {
-      starsEl.innerHTML = "";
+    let overlay, streaksEl, canvas, ctx, w, h;
+    let opened = false, closing = false;
+    let raf = null;
+    let bloomStart = 0;
+    let originX = 0, originY = 0;
+
+    let field = [];    // dense ambient starfield, fixed positions, just twinkles
+    let particles = []; // everything that flies out of the burst
+    let shapeIdx = [];  // indices into `particles` that form the heart outline, in order
+    let meteors = [];
+    let nextMeteorAt = 0;
+    let flashLife = 0;
+    let rings = [];
+
+    // -- timing (ms from bloomStart) --
+    const T_BURST_END = 1500;
+    const T_CONVERGE_START = 2600;
+    const T_CONVERGE_END = 7600;
+
+    const PALETTE_AMBIENT = ["#FFFFFF", "#DCE8FF", "#FFE9C7"];
+    const PALETTE_WARM = ["#FFD89C", "#FFE9C7", "#FFC1D9", "#FFB3C6"];
+    const PALETTE_COOL = ["#C9AFFF", "#AFE0FF", "#DCE8FF"];
+
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function heartPoint(t, cx, cy, scale) {
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = -(
+        13 * Math.cos(t) -
+        5 * Math.cos(2 * t) -
+        2 * Math.cos(3 * t) -
+        Math.cos(4 * t)
+      );
+      return { x: cx + x * scale, y: cy + y * scale };
+    }
+
+    function buildField() {
+      field = [];
+      for (let i = 0; i < B.fieldStarCount; i++) {
+        field.push({
+          x: rand(0, w),
+          y: rand(0, h),
+          size: rand(0.5, 1.9),
+          color: PALETTE_AMBIENT[randInt(0, PALETTE_AMBIENT.length - 1)],
+          baseAlpha: rand(0.15, 0.7),
+          twPhase: rand(0, TAU),
+          twSpeed: rand(0.3, 1.4),
+          appearAt: rand(0, 1100),
+        });
+      }
+    }
+
+    // Build the full burst: shape-bound stars (outline of the heart),
+    // filler stars (a soft cluster scattered inside it), and pure
+    // chaos stars that never converge — they just become part of the
+    // permanent sky once the storm settles.
+    function buildParticles() {
+      particles = [];
+      shapeIdx = [];
+
+      const cx = w * B.shapeCenter.x;
+      const cy = h * B.shapeCenter.y;
+      const scale = (B.shapeSize * Math.min(w, h)) / 32;
+
+      const n = B.shapePointCount;
+      for (let i = 0; i < n; i++) {
+        const t = (i / n) * TAU;
+        const target = heartPoint(t, cx, cy, scale);
+        shapeIdx.push(particles.length);
+        particles.push(makeParticle(target, PALETTE_WARM, true));
+      }
+
+      for (let i = 0; i < B.fillerStarCount; i++) {
+        const t = rand(0, TAU);
+        const r = Math.sqrt(rand(0.02, 0.72)); // bias outward a touch for even fill
+        const p = heartPoint(t, cx, cy, scale);
+        const target = {
+          x: cx + (p.x - cx) * r,
+          y: cy + (p.y - cy) * r,
+        };
+        particles.push(makeParticle(target, PALETTE_WARM, false));
+      }
+
+      const chaosCount = Math.max(0, B.burstCount - n - B.fillerStarCount);
+      for (let i = 0; i < chaosCount; i++) {
+        particles.push(makeParticle(null, PALETTE_COOL, false));
+      }
+    }
+
+    function makeParticle(target, palette, isShapePoint) {
+      const angle = rand(0, TAU);
+      const speed = rand(2.2, 8.5) * (target ? rand(0.6, 1) : rand(0.8, 1.3));
+      return {
+        x: originX,
+        y: originY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: target ? rand(1.6, 2.6) : rand(0.8, 2.2),
+        color: palette[randInt(0, palette.length - 1)],
+        target,
+        isShapePoint,
+        converging: false,
+        convergeFrom: null,
+        arrival: 0, // 0..1 how "locked in" it is
+        twPhase: rand(0, TAU),
+        twSpeed: rand(0.5, 1.8),
+        swirl: rand(-1, 1) * 0.6,
+      };
+    }
+
+    function buildStreaks(n = 60) {
+      streaksEl.innerHTML = "";
       const frag = document.createDocumentFragment();
+      const colors = [
+        "rgba(255,216,156,VAR)",
+        "rgba(255,193,217,VAR)",
+        "rgba(200,225,255,VAR)",
+        "rgba(230,235,255,VAR)",
+      ];
       for (let i = 0; i < n; i++) {
         const s = document.createElement("div");
         s.className = "moon-portal-streak";
+        const c = colors[randInt(0, colors.length - 1)];
+        s.style.background = `linear-gradient(to bottom, transparent, ${c.replace("VAR", ".9")}, transparent)`;
         s.style.left = rand(0, 100) + "%";
-        s.style.height = rand(70, 190) + "px";
-        s.style.animationDuration = rand(1.3, 3.1) + "s";
+        s.style.height = rand(70, 220) + "px";
+        s.style.animationDuration = rand(1.1, 2.9) + "s";
         s.style.animationDelay = rand(0, 2.6) + "s";
         frag.appendChild(s);
       }
-      starsEl.appendChild(frag);
+      streaksEl.appendChild(frag);
     }
 
-    function typeText(text, el, speed = 24) {
-      return new Promise((resolve) => {
-        el.textContent = "";
-        const caret = document.createElement("span");
-        caret.className = "moon-portal-caret";
-        let i = 0;
-        function step() {
-          if (!opened) return resolve(); // closed early, stop typing
-          if (i <= text.length) {
-            el.textContent = text.slice(0, i);
-            el.appendChild(caret);
-            i++;
-            setTimeout(step, text[i - 1] === "\n" ? speed * 6 : speed);
-          } else {
-            resolve();
-          }
-        }
-        step();
+    function resize() {
+      const rect = overlay.getBoundingClientRect();
+      canvas.width = w = rect.width * devicePixelRatio;
+      canvas.height = h = rect.height * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      w = rect.width;
+      h = rect.height;
+      buildField();
+      if (opened) buildParticles();
+    }
+
+    function drawGlowDot(x, y, size, color, alpha) {
+      ctx.globalAlpha = clamp(alpha, 0, 1);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, TAU);
+      ctx.fill();
+    }
+
+    function spawnMeteor() {
+      const startX = rand(w * 0.05, w * 0.95);
+      const startY = rand(0, h * 0.3);
+      const angle = rand(0.5, 1.05);
+      const speed = rand(9, 17);
+      const palette = [...PALETTE_WARM, ...PALETTE_COOL];
+      meteors.push({
+        x: startX,
+        y: startY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        len: rand(80, 220),
+        life: 1,
+        color: palette[randInt(0, palette.length - 1)],
       });
     }
 
-    async function open(originX, originY) {
+    function step(now) {
+      if (!opened && !closing) return;
+      const elapsed = now - bloomStart;
+      const phaseFade = closing ? 0.5 : elapsed < T_BURST_END ? 0.16 : elapsed < T_CONVERGE_END ? 0.14 : 0.4;
+
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      ctx.fillStyle = `rgba(3,6,13,${phaseFade})`;
+      ctx.fillRect(0, 0, w, h);
+
+      const tsec = elapsed / 1000;
+
+      // -- ambient field --
+      for (const s of field) {
+        const ef = elapsed < s.appearAt ? 0 : clamp((elapsed - s.appearAt) / 500, 0, 1);
+        if (ef <= 0) continue;
+        const flicker = Math.sin(tsec * s.twSpeed + s.twPhase) * 0.35;
+        drawGlowDot(s.x, s.y, s.size, s.color, s.baseAlpha * (0.75 + flicker) * ef);
+      }
+
+      // -- initial flash --
+      if (flashLife > 0) {
+        const grad = ctx.createRadialGradient(originX, originY, 0, originX, originY, Math.max(w, h) * 0.55);
+        grad.addColorStop(0, `rgba(255,246,230,${flashLife * 0.9})`);
+        grad.addColorStop(0.35, `rgba(255,216,156,${flashLife * 0.35})`);
+        grad.addColorStop(1, "rgba(255,216,156,0)");
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+        flashLife = Math.max(0, flashLife - 0.045);
+      }
+
+      // -- shockwave rings --
+      for (const r of rings) {
+        r.radius += r.speed;
+        r.alpha *= 0.965;
+        if (r.alpha < 0.01) continue;
+        ctx.globalAlpha = r.alpha;
+        ctx.strokeStyle = r.color;
+        ctx.lineWidth = r.width;
+        ctx.beginPath();
+        ctx.arc(originX, originY, r.radius, 0, TAU);
+        ctx.stroke();
+      }
+      rings = rings.filter((r) => r.alpha >= 0.01);
+      ctx.globalAlpha = 1;
+
+      // -- particles --
+      const convergeT = clamp((elapsed - T_CONVERGE_START) / (T_CONVERGE_END - T_CONVERGE_START), 0, 1);
+      const eased = easeInOutCubic(convergeT);
+      const breathe = elapsed > T_CONVERGE_END ? 1 + Math.sin(tsec * 0.55) * 0.012 : 1;
+      const cx = w * B.shapeCenter.x;
+      const cy = h * B.shapeCenter.y;
+
+      for (const p of particles) {
+        if (p.target && elapsed >= T_CONVERGE_START) {
+          if (!p.converging) {
+            p.converging = true;
+            p.convergeFrom = { x: p.x, y: p.y };
+          }
+          const bx = cx + (p.target.x - cx) * breathe;
+          const by = cy + (p.target.y - cy) * breathe;
+          p.x = lerp(p.convergeFrom.x, bx, eased);
+          p.y = lerp(p.convergeFrom.y, by, eased);
+          p.arrival = eased;
+        } else {
+          // free flight: outward burst with light drag + gentle swirl
+          p.vx *= 0.983;
+          p.vy *= 0.983;
+          p.vx += Math.sin(tsec * 0.6 + p.twPhase) * p.swirl * 0.02;
+          p.vy += Math.cos(tsec * 0.5 + p.twPhase) * p.swirl * 0.02;
+          p.x += p.vx;
+          p.y += p.vy;
+        }
+
+        const flicker = Math.sin(tsec * p.twSpeed + p.twPhase) * 0.3;
+        const alpha = p.target
+          ? clamp(0.55 + p.arrival * 0.45 + flicker * 0.2, 0, 1)
+          : clamp(0.55 + flicker, 0.15, 1);
+        drawGlowDot(p.x, p.y, p.size * (p.target ? 1 + p.arrival * 0.3 : 1), p.color, alpha);
+
+        if (p.arrival > 0.9) {
+          ctx.globalAlpha = (p.arrival - 0.9) * 4;
+          ctx.fillStyle = "rgba(255,255,255,.9)";
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 2.4, 0, TAU);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // -- the heart's outline, drawn as it locks into place --
+      if (shapeIdx.length > 1 && elapsed >= T_CONVERGE_START) {
+        const glow = clamp(eased, 0, 1);
+        ctx.strokeStyle = `rgba(255, 216, 200, ${0.15 + glow * 0.55})`;
+        ctx.lineWidth = 1;
+        ctx.shadowColor = "rgba(255, 190, 210, .85)";
+        ctx.shadowBlur = 5 + glow * 7;
+        ctx.beginPath();
+        for (let i = 0; i < shapeIdx.length; i++) {
+          const p = particles[shapeIdx[i]];
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      // -- occasional meteors, denser during the storm, rare at rest --
+      const meteorGapMin = elapsed < T_CONVERGE_START ? 260 : 5000;
+      const meteorGapMax = elapsed < T_CONVERGE_START ? 900 : 11000;
+      if (now > nextMeteorAt) {
+        spawnMeteor();
+        nextMeteorAt = now + rand(meteorGapMin, meteorGapMax);
+      }
+      meteors = meteors.filter((m) => m.life > 0);
+      for (const m of meteors) {
+        m.x += m.vx;
+        m.y += m.vy;
+        m.life -= 0.015;
+        const segLen = Math.hypot(m.vx, m.vy) || 1;
+        const tailX = m.x - (m.vx / segLen) * m.len;
+        const tailY = m.y - (m.vy / segLen) * m.len;
+        const grad = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
+        grad.addColorStop(0, m.color);
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.globalAlpha = clamp(m.life, 0, 1);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(tailX, tailY);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        if (m.x > w + 60 || m.y > h + 60) m.life = 0;
+      }
+
+      if (closing) {
+        closing = false; // one more frame then the RAF stops naturally on transitionend timeout
+      }
+
+      raf = requestAnimationFrame(step);
+    }
+
+    function open(ox, oy) {
       if (opened) return;
       opened = true;
-      overlay.style.setProperty("--portal-x", `${originX}px`);
-      overlay.style.setProperty("--portal-y", `${originY}px`);
+      closing = false;
+      originX = ox;
+      originY = oy;
+      overlay.style.setProperty("--portal-x", `${ox}px`);
+      overlay.style.setProperty("--portal-y", `${oy}px`);
       buildStreaks();
-      titleEl.textContent = "";
-      textEl.textContent = "";
-      hintEl.style.opacity = "0";
+      resize();
+      buildParticles();
+      meteors = [];
+      rings = [
+        { radius: 4, speed: 9, alpha: 0.9, width: 2.4, color: "rgba(255,246,230,.9)" },
+        { radius: 4, speed: 6.4, alpha: 0.7, width: 1.6, color: "rgba(255,193,217,.8)" },
+        { radius: 4, speed: 4.2, alpha: 0.55, width: 1.2, color: "rgba(180,210,255,.7)" },
+      ];
+      flashLife = 1;
+      bloomStart = performance.now();
+      nextMeteorAt = bloomStart + 200;
       overlay.classList.add("open");
-      await new Promise((r) => setTimeout(r, 950));
-      if (!opened) return;
-      titleEl.textContent = CONFIG.moonLetter.title;
-      await typeText(CONFIG.moonLetter.body, textEl, 24);
-      if (opened) hintEl.style.opacity = ".55";
+      if (!raf) raf = requestAnimationFrame(step);
     }
 
     function close() {
       if (!opened) return;
       opened = false;
+      closing = true;
       overlay.classList.remove("open");
+      setTimeout(() => {
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+        closing = false;
+        if (ctx) ctx.clearRect(0, 0, w, h);
+      }, 1700);
     }
 
     function build() {
       overlay = document.createElement("div");
       overlay.className = "moon-portal";
       overlay.innerHTML = `
-        <div class="moon-portal-stars"></div>
-        <div class="moon-portal-content">
-          <div class="moon-portal-title"></div>
-          <div class="moon-portal-text"></div>
-          <div class="moon-portal-hint">tap anywhere to return to the sky</div>
+        <div class="moon-portal-nebula">
+          <div class="nebula-blob"></div>
+          <div class="nebula-blob"></div>
+          <div class="nebula-blob"></div>
+          <div class="nebula-blob"></div>
         </div>
+        <div class="moon-portal-stars"></div>
+        <canvas class="moon-portal-canvas"></canvas>
+        <div class="moon-portal-vignette"></div>
       `;
       document.body.appendChild(overlay);
-      starsEl = overlay.querySelector(".moon-portal-stars");
-      titleEl = overlay.querySelector(".moon-portal-title");
-      textEl = overlay.querySelector(".moon-portal-text");
-      hintEl = overlay.querySelector(".moon-portal-hint");
+      streaksEl = overlay.querySelector(".moon-portal-stars");
+      canvas = overlay.querySelector(".moon-portal-canvas");
+      ctx = canvas.getContext("2d");
       overlay.addEventListener("click", close);
+      window.addEventListener("resize", () => {
+        if (opened) resize();
+      });
     }
 
     function init() {
