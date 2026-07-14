@@ -49,7 +49,7 @@
     fireflyCount: 22,
     fireflyHeartCycleMs: 26000, // fireflies gather into a heart roughly this often
 
-    petalCount: 26,
+    petalCount: 100,
 
     // The "wow" moment: when the fireflies finish gathering into a
     // heart, they burst into lanterns — each carrying one photo —
@@ -57,12 +57,12 @@
     // paths with your own images (put them in an assets/photos/
     // folder next to your HTML file) and write real captions.
     photos: [
-      { src: "assets/photos/1.jpg", caption: "Add a caption for this memory." },
-      { src: "assets/photos/2.jpg", caption: "Add a caption for this memory." },
-      { src: "assets/photos/3.jpg", caption: "Add a caption for this memory." },
-      { src: "assets/photos/4.jpg", caption: "Add a caption for this memory." },
-      { src: "assets/photos/5.jpg", caption: "Add a caption for this memory." },
-      { src: "assets/photos/6.jpg", caption: "Add a caption for this memory." },
+      { src: "assets/photos/1.jpg", caption: "Where it all started" },
+      { src: "assets/photos/2.jpg", caption: "When i realised how much you mean" },
+      { src: "assets/photos/3.jpg", caption: "MY sleepy cat" },
+      { src: "assets/photos/4.jpg", caption: "My favourite memory together" },
+      { src: "assets/photos/5.jpg", caption: "SOOOOO Prettyy" },
+      { src: "assets/photos/6.jpg", caption: "Wont forget this day ever" },
     ],
     lanternRiseDurationMs: 7000, // how long each lantern takes to float to its resting spot
 
